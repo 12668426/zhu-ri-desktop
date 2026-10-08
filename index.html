@@ -396,9 +396,10 @@ function scrollScheduleToCurrent(sc,force=false){
  if(!rows.length){lastScheduleScrollKey='';return;}
  const now=new Date(),{cur,next}=currentTimeline(now);
  const match=id=>rows.find(row=>row.dataset.task===id);
- const nextToday=next&&todayTasks(now.getDay()).some(t=>t.id===next.id);
- const target=match(cur?.id)||(nextToday?match(next.id):null)||rows[rows.length-1];
- const phase=cur?.id===target.dataset.task?'now':nextToday&&next?.id===target.dataset.task?'next':'last';
+ const currentMinute=now.getHours()*60+now.getMinutes();
+ const upcomingToday=todayTasks(now.getDay()).find(t=>tod(t.start)>currentMinute);
+ const target=match(cur?.id)||match(upcomingToday?.id)||rows[rows.length-1];
+ const phase=cur?.id===target.dataset.task?'now':upcomingToday?.id===target.dataset.task?'next':'last';
  const key=dayKey(now)+'|'+target.dataset.task+'|'+phase;
  if(!force&&key===lastScheduleScrollKey)return; // Keep manual scrolling undisturbed between changes.
  const initial=lastScheduleScrollKey==='';
