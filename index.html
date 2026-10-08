@@ -389,6 +389,28 @@ function scrollScheduleToCurrent(sc,animated=false){
  const maxTop=Math.max(0,sc.scrollHeight-sc.clientHeight);
  sc.scrollTo({top:Math.max(0,Math.min(maxTop,idealTop)),behavior:animated?'smooth':'auto'});
 }
+// Keep the highlighted time block visible inside the timetable card in Plash.
+let lastScheduleScrollKey='';
+function scrollScheduleToCurrent(sc,force=false){
+ const rows=Array.from(sc.querySelectorAll('tbody tr[data-task]'));
+ if(!rows.length){lastScheduleScrollKey='';return;}
+ const now=new Date(),{cur,next}=currentTimeline(now);
+ const match=id=>rows.find(row=>row.dataset.task===id);
+ const nextToday=next&&todayTasks(now.getDay()).some(t=>t.id===next.id);
+ const target=match(cur?.id)||(nextToday?match(next.id):null)||rows[rows.length-1];
+ const phase=cur?.id===target.dataset.task?'now':nextToday&&next?.id===target.dataset.task?'next':'last';
+ const key=dayKey(now)+'|'+target.dataset.task+'|'+phase;
+ if(!force&&key===lastScheduleScrollKey)return; // Keep manual scrolling undisturbed between changes.
+ const initial=lastScheduleScrollKey==='';
+ lastScheduleScrollKey=key;
+ const sticky=sc.querySelector('thead')?.getBoundingClientRect().height||0;
+ const rowRect=target.getBoundingClientRect(),scRect=sc.getBoundingClientRect();
+ const visible=Math.max(0,sc.clientHeight-sticky);
+ const desired=sc.scrollTop+rowRect.top-scRect.top-sticky-Math.max(8,(visible-rowRect.height)*0.35);
+ const top=Math.max(0,Math.min(Math.max(0,sc.scrollHeight-sc.clientHeight),desired));
+ const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ sc.scrollTo({top,behavior:(initial||force||reduced)?'auto':'smooth'});
+}
 function renderCard(keepScroll=false){let head='',body='',foot='';let sc=document.getElementById('panelbody');let prev=keepScroll?sc.scrollTop:0;let v=nav.view;
  if(v==='schedule'){({head,body,foot}=scheduleCard())}
  else if(v==='subject'){let isM=nav.subject==='mock';head=header(isM?'模拟电子技术':'电路','LEARNING PATH',isM?`${state.checkedVideos.length}/69`:`${state.checkedCircuit.length}/6`);body=isM?mockCard():circuitCard();foot=isM?'69节视频 · 按老师圈选清单排序并分阶段学习':'学校考纲 · 6个知识模块'}
@@ -400,6 +422,7 @@ function renderCard(keepScroll=false){let head='',body='',foot='';let sc=documen
  else if(v==='confirm'){head=header('请确认','ONE MORE STEP');body=confirmCard();foot='不会删除已完成的视频记录'}
  else if(v==='generic'){head=header(nav.subject,'STUDY SUBJECT');body=genericCard(nav.subject);foot='请按实际进度安排学习'}
  document.querySelector('.panel').classList.toggle('schedule-view',v==='schedule');document.getElementById('panelhead').innerHTML=head;sc.innerHTML=body;document.getElementById('panelfoot').innerHTML=foot;sc.scrollTop=keepScroll?prev:0;
+ if(v==='schedule')scrollScheduleToCurrent(sc,!keepScroll);else lastScheduleScrollKey='';
  // 首次打开/返回时间表自动定位；时段切换时自动跟进，普通每分钟刷新保留手动滚动位置。
  const focusId=v==='schedule'?(currentTimeline().cur?.id||currentTimeline().next?.id||null):null;
  const focusChanged=focusId!==lastScheduleFocusId;
