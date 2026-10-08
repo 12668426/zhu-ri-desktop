@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><title>逐日 · MacBook Neo 专升本桌面 · 跟随系统外观</title>
+<style>
+:root{--bg:#081e2a;--ink:#182d37;--muted:#697d85;--line:#e4eae8;--teal:#156b63;--mint:#d7f1e5;--paper:#f7faf9;--side-gap:clamp(345px,29vw,480px);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;font-synthesis:none}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;overscroll-behavior-x:none;touch-action:pan-y}body{background:#081e2a;color:var(--ink)}button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #e9a86b;outline-offset:2px}button:disabled{opacity:.48;cursor:not-allowed}
+#desk{height:100vh;height:100dvh;min-height:580px;overflow:hidden;overscroll-behavior-x:none;touch-action:pan-y;position:relative;isolation:isolate;background:radial-gradient(ellipse 53% 70% at 16% 14%,rgba(72,131,131,.38) 0%,transparent 70%),radial-gradient(ellipse 44% 60% at 57% 85%,rgba(69,123,132,.16),transparent 83%),linear-gradient(145deg,#0e2c3b 0%,#0b2533 49%,#061825 100%)}
+#desk::before{content:"";position:absolute;pointer-events:none;inset:0;background:radial-gradient(circle at 89% 35%,#7d9b9b16 0 1px,transparent 1.8px);background-size:36px 36px;opacity:.37}
+#desk::after{content:"";position:absolute;pointer-events:none;left:-22vw;bottom:-48vh;width:78vw;height:75vh;border-radius:50%;border:1px solid #ffffff0b;box-shadow:0 0 0 70px #ffffff04,0 0 0 145px #ffffff03}
+.workspace{height:100%;width:calc(100% - var(--side-gap));max-width:1190px;position:relative;z-index:1;padding:25px 0 20px clamp(24px,2.6vw,42px);display:flex;flex-direction:column;min-width:0}
+.topbar{height:46px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:14px;color:#d9e8e7;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:12px;white-space:nowrap}.brand-icon{display:grid;place-items:center;width:38px;height:38px;flex-shrink:0;background:linear-gradient(145deg,#247D73 0%,#115458 100%);border:1px solid #c8ead833;border-radius:12px;box-shadow:0 6px 20px #03152430;overflow:hidden}.brand-symbol{display:block;width:28px;height:28px}.brand h1{font-size:20px;line-height:1.05;margin:0;font-weight:710;letter-spacing:.13em}.brand p{font-size:10px;margin:5px 0 0;color:#aec9c8;letter-spacing:.2em}.topdate{font-size:12px;color:#aac4c3;letter-spacing:.07em;white-space:nowrap;font-weight:550}
+.grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(276px,.78fr) minmax(450px,1.24fr);gap:clamp(14px,1.6vw,24px)}
+.overview{display:flex;flex-direction:column;gap:15px;min-height:0;overflow:hidden}
+.clockbox{flex-shrink:0;padding:21px 5px 9px;color:#eaf7f5}.hello{font-weight:570;letter-spacing:.12em;color:#aed2cc;font-size:13px}.clock{font-size:clamp(78px,7.45vw,122px);font-weight:600;font-variant-numeric:tabular-nums;line-height:1.13;letter-spacing:-.07em;margin-top:8px;color:#f3fbfa;white-space:nowrap}.clock small{font-size:18px;font-weight:470;letter-spacing:0;color:#bdd4cf;margin-left:9px}.clockhint{margin-top:9px;color:#bdd6d1;font-size:13px}
+.currentcard{background:linear-gradient(145deg,rgba(25,106,103,.94),rgba(20,86,90,.95));border:1px solid #6daba558;border-radius:23px;padding:23px 22px 19px;color:#f1faf7;box-shadow:0 16px 44px #00131f40;min-height:230px;flex-shrink:0}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:680;color:#b9dcd3}.active-line{display:flex;align-items:center;gap:9px}.signal{width:8px;height:8px;background:#a5f3d0;border-radius:100%;box-shadow:0 0 0 4px #a5f3d029}.taskname{font-size:clamp(22px,2vw,32px);line-height:1.3;margin:18px 0 8px;letter-spacing:-.015em;font-weight:730;overflow-wrap:anywhere}.tasktime{font-size:13px;color:#c9e9e0;font-variant-numeric:tabular-nums}.progressbar{height:5px;margin:20px 0 10px;border-radius:99px;background:#ffffff40;overflow:hidden}.progressbar i{display:block;height:100%;background:#caf5e1;width:0;transition:width .4s}.timeleft{font-size:13px;color:#dff4eb}.upnext{font-size:12px;line-height:1.5;color:#d4eae1;margin-top:13px;padding-top:12px;border-top:1px solid #ffffff32;overflow-wrap:anywhere}
+.progress-title{display:flex;justify-content:space-between;align-items:center;color:#e7f2ec;font-size:15px;font-weight:680;letter-spacing:.02em;margin:4px 2px -3px}.progress-sub{color:#a7c3be;font-size:11px;font-weight:450}.subjectcards{display:grid;grid-template-columns:1fr 1fr;gap:11px;min-height:0}.subjectcard{padding:18px 15px;min-width:0;text-align:left;display:flex;flex-direction:column;gap:8px;border:1px solid #b6d0cc44;border-radius:17px;background:#f3f9f5ed;box-shadow:0 9px 32px #001b2822;transition:background .18s,box-shadow .18s}.subjectcard:hover{background:#fff;box-shadow:0 11px 35px #000c1738}.subjectcard .glyph{font-size:23px;color:#2b8076}.subjectcard .subjectname{font-size:14px;font-weight:760;line-height:1.3;color:#233e43}.subjectcard .ratio{font-size:12px;color:#6b8481;font-variant-numeric:tabular-nums}.mini-progress{height:5px;border-radius:20px;background:#d9e7e1;overflow:hidden;margin-top:auto}.mini-progress i{height:100%;background:#499e8c;display:block;width:0;transition:width .25s}.subjectcard.circuit .glyph{color:#d48f62}.subjectcard.circuit .mini-progress i{background:#d48f62}
+.panel{display:flex;flex-direction:column;min-height:0;min-width:0;border-radius:24px;background:#f8fbf9f7;box-shadow:0 20px 54px #00172550;overflow:hidden;border:1px solid #ffffffdf;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.panel-head{flex-shrink:0;min-height:82px;padding:21px 22px 17px;border-bottom:1px solid #dfe9e5;display:flex;align-items:center;gap:11px}.panel-meta{min-width:0;flex:1}.panel-kicker{color:#638d84;font-size:10px;letter-spacing:.18em;font-weight:760}.panel-title{font-size:20px;letter-spacing:-.01em;margin:4px 0 0;color:#183e41;line-height:1.18;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.panel-side{flex:none;display:flex;align-items:center;gap:7px}.subtle{font-size:11px;color:#7b9490;white-space:nowrap}.action,.backbtn{border:1px solid #d5e4df;background:#edf6f2;color:#276e61;border-radius:10px;font-size:12px;font-weight:690;padding:9px 12px;white-space:nowrap;min-height:36px}.action:hover,.backbtn:hover{background:#d9ede4}.backbtn{padding:8px 10px;font-size:14px;min-width:36px}
+.panel-body{flex:1;min-height:0;min-width:0;overflow-x:hidden!important;overflow-y:auto;overscroll-behavior-x:none;overscroll-behavior-y:contain;touch-action:pan-y;scrollbar-color:#c2d5cb transparent;scrollbar-width:thin}.panel-body::-webkit-scrollbar{width:5px;height:0}.panel-body::-webkit-scrollbar-thumb{background:#b5cec1;border-radius:10px}.panel-body>*{min-width:0;max-width:100%}.panel-foot{min-height:41px;display:flex;align-items:center;padding:8px 22px;border-top:1px solid #e4ede7;flex-shrink:0;color:#7a908a;font-size:11px;gap:6px}.panel-foot strong{color:#2d7467;font-weight:670}
+.rows{padding:8px 13px 12px;min-width:0}.row{width:100%;min-width:0;display:grid;grid-template-columns:99px minmax(0,1fr) 44px;gap:9px;align-items:center;text-align:left;min-height:34px;padding:7px 10px;background:transparent;border:0;border-bottom:1px solid #e8efeb;border-radius:9px;transition:background .18s;color:#2f4b4d;font-size:13.5px;touch-action:pan-y}.row:hover{background:#e9f3ee}.row.now{background:#d6eee5;border-bottom-color:transparent;box-shadow:inset 3px 0 #27927e}.row.done .row-title{color:#899d9b;text-decoration:line-through}.row-time{white-space:nowrap;font-variant-numeric:tabular-nums;color:#718d89;font-size:11.5px;font-weight:580}.row-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:13.5px;font-weight:590}.row.now .row-title,.row.now .row-time{color:#146756;font-weight:760}.row-mark{text-align:right;font-size:10px;color:#88a29a;white-space:nowrap}.row.now .row-mark{color:#137362;font-weight:750}
+.content{padding:18px 19px 25px;overflow-x:hidden;min-width:0}.info{border-radius:14px;padding:15px 16px;background:#e9f5ef;border:1px solid #d8e9e0;margin:0 0 14px}.info span{font-size:11px;font-weight:650;letter-spacing:.08em;color:#4c8678}.info h3{font-size:17px;font-weight:730;line-height:1.45;margin:5px 0;color:#214841}.info p{font-size:12px;line-height:1.7;color:#53736b;margin:5px 0 0;overflow-wrap:anywhere}.blocktitle{font-size:11px;color:#6b9185;font-weight:730;margin:17px 0 9px;letter-spacing:.09em}.item{display:flex;width:100%;min-width:0;gap:12px;align-items:center;min-height:57px;text-align:left;border:1px solid #e4ece6;background:#fff;border-radius:12px;padding:10px 13px;margin-bottom:8px;transition:background .16s}.item:hover{background:#f2f8f4}.item .number{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:#e6f3ed;color:#24806a;font-weight:790;flex-shrink:0;font-size:12px}.item .details{min-width:0;flex:1}.item b{display:block;color:#254449;font-size:13.5px;line-height:1.4;font-weight:730;overflow-wrap:anywhere}.item small{display:block;color:#7c908a;font-size:11.5px;line-height:1.6;margin-top:3px;overflow-wrap:anywhere}.item .arrow{color:#619b89;font-size:20px;flex-shrink:0}.checkbox{width:23px;height:23px;display:grid;place-items:center;border:1.5px solid #b7cfbf;border-radius:8px;color:#fff;flex-shrink:0;background:#fff;font-size:14px}.item.done .checkbox{background:#1f876f;border-color:#1f876f}.item.done b{color:#82948d}.tickgroup{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}.pill{font-size:11.5px;background:#f5f9f6;color:#3f7568;border:1px solid #dce9e0;padding:8px 10px;border-radius:9px;font-weight:680}.pill.active{background:#d9eee4;border-color:#a5cbb8;color:#125c4e}.button-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.primary{background:#1d7466;color:#fff;border:0;border-radius:11px;padding:11px 14px;font-size:13px;font-weight:740}.primary:hover{background:#11584c}.secondary{background:#fff;color:#2f7766;border:1px solid #d4e6dc;border-radius:11px;padding:10px 13px;font-size:12.5px;font-weight:690}.secondary:hover{background:#eff6f1}.mutedtext{font-size:12px;line-height:1.75;color:#728783}.feedback{color:#176955;font-size:12px;line-height:1.5;margin-top:7px}.subject-tag{font-weight:660;color:#638881;font-size:11px}.field{display:block;font-size:12px;font-weight:740;color:#3e6963;margin:11px 0}.field input,.field select,.field textarea{border:1px solid #d4e2dc;background:#fff;border-radius:10px;padding:11px 12px;font-size:14px;color:#25454a;margin-top:7px;display:block;width:100%;max-width:100%;outline:none}.field textarea{min-height:75px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:#5fa38a}.fields2{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0}.validation{font-size:12px;color:#bc5a53;padding:8px 0}.confirm{padding:18px;background:#fff4e8;border:1px solid #f0d9c0;border-radius:13px;color:#7f552b;font-size:13px;line-height:1.6}.danger{color:#b44d45;border-color:#edc9c4}.notice{font-size:12px;color:#6f837f;line-height:1.75;margin:13px 0}
+.bottomline{display:flex;justify-content:space-between;align-items:center;padding-top:8px;font-size:10px;color:#7ca3a0;letter-spacing:.1em;min-height:26px;flex:none}.bottomline .note{opacity:.85}
+#toast{position:fixed;bottom:28px;left:36px;background:#ecfff3;color:#236950;border-radius:12px;padding:11px 16px;box-shadow:0 14px 35px #0006;z-index:20;font-size:13px;font-weight:650;opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .2s,transform .2s}#toast.visible{opacity:1;transform:translateY(0)}
+@media(min-width:1850px){.workspace{max-width:1370px}.clock{font-size:126px}.row{min-height:36px}}
+@media(max-width:1240px){:root{--side-gap:clamp(300px,27vw,365px)}.workspace{padding-left:23px}.grid{grid-template-columns:minmax(236px,.7fr) minmax(420px,1.24fr);gap:13px}.panel-head{padding:16px 17px;min-height:72px}.panel-title{font-size:18px}.row{grid-template-columns:92px minmax(0,1fr) 38px;padding:7px 8px}.row-time{font-size:11px}.row-title{font-size:12.5px}.currentcard{padding:19px 17px}.clock{font-size:74px}.subjectcard{padding:12px 10px}}
+@media(max-width:1020px){:root{--side-gap:250px}.workspace{width:calc(100% - 250px)}.grid{grid-template-columns:minmax(222px,.72fr) minmax(360px,1.15fr)}.row-mark{font-size:9px}.topdate{display:none}.clock{font-size:66px}.panel-head{padding:14px}}
+@media(max-width:800px){:root{--side-gap:0px}.workspace{width:100%;padding:17px}.grid{grid-template-columns:minmax(0,1fr) minmax(350px,1.2fr)}.clock{font-size:61px}.clock small{display:none}.row{grid-template-columns:88px minmax(0,1fr) 30px}.panel-head{padding:13px}.subjectcards{grid-template-columns:1fr}.subjectcard{padding:9px 12px}.subjectcard .glyph{display:none}}
+@media(max-width:620px){html,body{overflow:auto}#desk{height:auto;min-height:100vh;overflow:visible}.workspace{padding:17px;max-width:100%}.topbar{margin-bottom:7px}.grid{grid-template-columns:1fr;gap:15px}.overview{overflow:visible}.clockbox{padding:8px}.clock{font-size:73px}.currentcard{min-height:auto}.subjectcards{grid-template-columns:1fr 1fr}.panel{height:690px}.bottomline{padding-bottom:7px}.row{grid-template-columns:97px minmax(0,1fr) 34px}.row-title{font-size:14px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* Desktop-only adjustable blank-space divider. Only this handle receives pointer events in the empty side. */
+@media (min-width:801px){
+  .workspace{width:calc(100% - var(--side-gap));max-width:none;}
+  /* Narrow visual handle, but a comfortable invisible hit target. */
+  #space-resizer{position:absolute;z-index:8;left:clamp(0px,calc(100% - var(--side-gap) - 12px),calc(100% - 24px));top:50%;transform:translateY(-50%);width:24px;height:84px;padding:0;display:flex;align-items:center;justify-content:center;border:0;background:transparent;cursor:ew-resize;touch-action:none;-webkit-user-select:none;user-select:none;outline-offset:2px;}
+  #space-resizer .grip-core{display:block;position:relative;width:5px;height:46px;border-radius:999px;background:rgba(199,231,220,.84);border:1px solid rgba(240,255,249,.55);box-shadow:0 2px 10px rgba(0,18,24,.34);transition:background .14s,box-shadow .14s;}
+  #space-resizer:hover .grip-core,#space-resizer:focus-visible .grip-core,#space-resizer.dragging .grip-core{background:#e2fff3;box-shadow:0 1px 12px rgba(180,245,222,.3);}
+  #desk.dragging-space{cursor:ew-resize!important;}
+  #desk.dragging-space *{cursor:ew-resize!important;user-select:none!important;-webkit-user-select:none!important;}
+}
+@media (max-width:800px){#space-resizer{display:none}}
+
+/* 参照正式 Excel 时间表的六列表格，保留卡片内路由和 Finder 留白 */
+.panel.schedule-view{background:#f9fbfc;border:1px solid #dfe8ef}
+.panel.schedule-view .panel-head{background:#324c66;border-bottom:0;color:#fff;min-height:72px;padding:16px 21px}
+.panel.schedule-view .panel-title{color:#fff;font-size:19px;letter-spacing:.02em}
+.panel.schedule-view .panel-kicker{color:#b9d6e9;letter-spacing:.15em}
+.panel.schedule-view .action{background:#ffffff20;color:#fff;border:1px solid #ffffff58;font-size:12px}
+.panel.schedule-view .action:hover{background:#ffffff38}
+.panel.schedule-view .panel-body{background:#f8fafc;scrollbar-color:#b8c8d5 transparent}
+.panel.schedule-view .panel-foot{background:#f3f7fa;color:#6f8190;border-top-color:#dfebf3}
+.timetable{border-collapse:collapse;width:100%;table-layout:fixed;font-size:12px;color:#263f50;font-variant-numeric:tabular-nums}
+.timetable col.col-time{width:13.2%}
+.timetable col.col-arrange{width:30%}
+.timetable col.col-category{width:12.8%}
+.timetable col.col-subject{width:17.8%}
+.timetable col.col-hours{width:13%}
+.timetable th{position:sticky;top:0;z-index:2;background:#e3ebf2;border-bottom:1px solid #cbd8e2;padding:12px 3px;text-align:center;white-space:nowrap;font-size:11.4px;font-weight:740;color:#38556b}
+.timetable td{height:36px;min-height:36px;text-align:center;border-bottom:1px solid #e7edf3;padding:7px 4px;line-height:1.35;vertical-align:middle;background:#fff}
+.timetable tbody tr:nth-child(even) td{background:#f0f5fa}
+.timetable tbody tr{cursor:pointer;outline-offset:-3px}
+.timetable tbody tr:hover td{background:#e5eff8}
+.timetable tbody tr:focus-visible td{background:#daeaf8}
+.timetable .arrange{font-weight:610;text-align:left;padding-left:10px;white-space:normal;overflow-wrap:anywhere}
+.timetable .time{white-space:nowrap;font-size:11.2px;font-weight:570;color:#4f6574}
+.timetable .hours{font-weight:650;color:#40576a;white-space:nowrap}
+.timetable .subject{font-weight:650;overflow-wrap:anywhere}
+.timetable .cat{font-weight:730;letter-spacing:.01em;background:#e0effa!important;color:#2b6189}
+.timetable .cat.break{background:#f1eee7!important;color:#777060}
+.timetable .cat.life{background:#eff1f5!important;color:#666f7d}
+.timetable .cat.exercise{background:#e4f2e8!important;color:#377a56}
+.timetable .cat.sleep{background:#ece8f7!important;color:#776298}
+.timetable tbody tr.is-current td{background:#d8f1e9!important;color:#144d46;font-weight:750;border-top:1px solid #84c4b2;border-bottom:1px solid #84c4b2}
+.timetable tbody tr.is-current td:first-child{box-shadow:inset 4px 0 #219581}
+.timetable tbody tr.is-current .cat{filter:saturate(1.05)}
+.timetable tbody tr.is-checked .arrange{color:#60778a}
+.timetable .arrange .done-mark{display:inline-block;color:#219581;font-weight:800;padding-left:4px}
+.timetable .arrange .now-mark{display:inline-block;color:#0e7668;font-weight:750;font-size:10px;padding-left:5px}
+.timetable-note{padding:9px 11px;background:#e9f1f7;color:#5a7283;font-size:11px;line-height:1.5;text-align:center;border-top:1px solid #dae5ed}
+.timetable-empty{padding:27px;color:#607585;text-align:center}
+@media(max-width:1250px){.timetable{font-size:11.2px}.timetable th{font-size:10.6px;padding:10px 2px}.timetable td{padding:6px 2px}.timetable .arrange{padding-left:6px}.timetable .time{font-size:10.5px}.timetable col.col-arrange{width:29%}.timetable col.col-subject{width:18.8%}}
+@media(max-width:1030px){.timetable{font-size:10px}.timetable th{font-size:10px}.timetable .time{font-size:9.5px}.timetable td{padding:5px 1px}.timetable .arrange{padding-left:4px}}
+@media(max-width:620px){.timetable{font-size:11px}.timetable th{font-size:10px}}
+
+/* ===== macOS 外观同步：仅依赖 prefers-color-scheme，系统切换即时生效；无按钮、无保存设置 ===== */
+@media (prefers-color-scheme: light) {
+ :root{color-scheme:light}
+ body{background:#e8f1f2;color:#273e45}
+ #desk{background:radial-gradient(ellipse 62% 70% at 10% 7%,#ffffffc9 0%,transparent 72%),radial-gradient(ellipse 44% 65% at 75% 87%,#d3e6e89f,transparent 84%),linear-gradient(135deg,#eaf4f4 0%,#e3efef 54%,#dcebec 100%)}
+ #desk::before{opacity:.19;background-image:radial-gradient(circle at 89% 35%,#749f9c3c 0 1px,transparent 1.8px)}
+ #desk::after{box-shadow:0 0 0 70px #ffffff0c,0 0 0 145px #ffffff08;border-color:#5e9a9b14}
+ .topbar{color:#214c54}.brand-icon{background:linear-gradient(145deg,#247D73 0%,#115458 100%);box-shadow:0 6px 20px #66878e35}.brand p,.topdate{color:#607f85}
+ .hello{color:#567e84}.clock{color:#214850}.clock small,.clockhint{color:#587f83}
+ .progress-title{color:#28515a}.progress-sub{color:#63858b}
+ .currentcard{background:linear-gradient(145deg,#277c78,#24646d);border-color:#a6dad39c;box-shadow:0 13px 38px #5a88944a}
+ .subjectcard{background:#fffffff2;border-color:#cddfdb;box-shadow:0 9px 27px #74919a1e}
+ .subjectcard:hover{background:#f8fffc;box-shadow:0 12px 28px #78939a35}
+ .bottomline{color:#64878c}
+ #space-resizer .grip-core{background:#639995!important;border-color:#e1f7ee!important;box-shadow:0 2px 10px #537d7540!important}
+ #space-resizer:hover .grip-core,#space-resizer.dragging .grip-core{background:#207869!important}
+ #toast{background:#f5fffb;color:#216b56}
+}
+@media (prefers-color-scheme: dark) {
+ :root{color-scheme:dark;--ink:#e8f2ef;--muted:#a6bec0;--line:#34505a;--paper:#122c36;--mint:#204b48;--teal:#7bc7b3}
+ /* 真正的暗色卡片：所有内部页均采用深底，而不是仅改变桌面背景 */
+ .panel{background:#172d37;border-color:#43616a;box-shadow:0 18px 54px #000a}
+ .panel-head{border-bottom-color:#36525c}
+ .panel-title{color:#e6f2f1}.panel-kicker{color:#99c9bf}.subtle{color:#9bb9b9}
+ .panel-body{scrollbar-color:#56717b transparent}
+ .panel-foot{border-top-color:#35515a;color:#a7bec1}.panel-foot strong{color:#87dbbf}
+ .action,.backbtn{background:#244550;border-color:#456772;color:#c8efe4}
+ .action:hover,.backbtn:hover{background:#305865}
+ .content{color:#dfedeb}.info{background:#1f4149;border-color:#3a6265}
+ .info span{color:#9bd3c1}.info h3{color:#e3f5ee}.info p{color:#b8d3cb}
+ .blocktitle,.subject-tag{color:#aac7bb}
+ .item{background:#1d3843;border-color:#365761;color:#e6f0ed}.item:hover{background:#274b53}
+ .item .number{background:#2d5757;color:#aee5c9}.item b{color:#e8f5f0}
+ .item small{color:#adc1c1}.item .arrow{color:#8dbda9}
+ .item.done b{color:#97aeac}
+ .checkbox{background:#203843;border-color:#6b8b81}.item.done .checkbox{background:#287d6f;border-color:#287d6f}
+ .pill{background:#24434c;color:#bcead9;border-color:#3d6565}.pill.active{background:#2e6156;border-color:#6a9983;color:#eefff5}
+ .secondary{background:#1d3a44;color:#c4ebdd;border-color:#43645b}.secondary:hover{background:#2b4e57}
+ .primary{background:#287d6e;color:#fff}.primary:hover{background:#37927f}
+ .mutedtext,.notice{color:#a5bdbd}
+ .field{color:#b9d7cd}.field input,.field select,.field textarea{background:#142e39;border-color:#42606a;color:#ebf6f4;caret-color:#e9f9ef}
+ .field input:focus,.field select:focus,.field textarea:focus{border-color:#7cbeaf}
+ .validation{color:#ffaaa4}.feedback{color:#9ce3c4}
+ .confirm{background:#392f26;border-color:#745840;color:#f3d8b2}
+ #toast{background:#244a4a;color:#e2fff1}
+ /* 六列表格深色适配：表头、隔行、分类、当前时段均有足够对比度 */
+ .panel.schedule-view{background:#142b37;border-color:#45636b}
+ .panel.schedule-view .panel-head{background:#253d51}
+ .panel.schedule-view .panel-title{color:#f0f6fa}
+ .panel.schedule-view .panel-kicker{color:#b5d4e0}
+ .panel.schedule-view .panel-body{background:#182e39;scrollbar-color:#63828a transparent}
+ .panel.schedule-view .panel-foot{background:#1e3742;color:#abc1ca;border-top-color:#3e5865}
+ .timetable{color:#dce9ec}
+ .timetable th{background:#294452;color:#e0eff0;border-bottom-color:#45606d}
+ .timetable td{background:#182e39;border-bottom-color:#36505c}
+ .timetable tbody tr:nth-child(even) td{background:#213843}
+ .timetable tbody tr:hover td{background:#2c4b59}
+ .timetable tbody tr:focus-visible td{background:#31535e}
+ .timetable .time,.timetable .hours{color:#cedfe2}
+ .timetable .cat{background:#284b63!important;color:#b7e2ff}
+ .timetable .cat.break{background:#454137!important;color:#f1d9a8}
+ .timetable .cat.life{background:#37414e!important;color:#cad5e1}
+ .timetable .cat.exercise{background:#294d40!important;color:#b3eaca}
+ .timetable .cat.sleep{background:#423c59!important;color:#dccafa}
+ .timetable tbody tr.is-current td{background:#24574f!important;color:#e6fff5;border-top-color:#4e9e88;border-bottom-color:#4e9e88}
+ .timetable tbody tr.is-current .time,.timetable tbody tr.is-current .hours{color:#e6fff5}
+ .timetable tbody tr.is-checked .arrange{color:#a5c2bf}
+ .timetable .arrange .done-mark,.timetable .arrange .now-mark{color:#a1e6c9}
+ .timetable-empty{color:#b3cbce}
+ .subjectcard{background:#193540;border-color:#3d5d62;box-shadow:0 9px 28px #0004}
+ .subjectcard:hover{background:#244751;box-shadow:0 10px 32px #0005}
+ .subjectcard .subjectname{color:#e1f0ee}.subjectcard .ratio{color:#b1c8c7}
+ .subjectcard .glyph{color:#98d2c1}.subjectcard.circuit .glyph{color:#f0bb93}
+ .mini-progress{background:#3a5960}
+ .progress-sub{color:#a3bdbb}
+ #space-resizer .grip-core{background:#a2ccc2;border-color:#d7eee5}
+}
+
+/* 更直观的倒计时卡：大数字 > 阶段进度 > 下一项。遵循系统浅色/深色外观。 */
+.currentcard{padding:20px 21px 19px;min-height:295px;--timer-accent:#eafff4;--timer-fill:#c4e7d8}
+.currentcard .eyebrow{letter-spacing:.11em;font-size:11px}
+.currentcard .taskname{margin:13px 0 3px;font-size:clamp(21px,1.75vw,28px);font-weight:750;line-height:1.24}
+.currentcard .tasktime{font-size:11px;letter-spacing:.01em;color:#d4eee8}
+.timerrow{display:flex;justify-content:space-between;gap:6px;align-items:flex-end;margin:17px 0 13px;min-width:0}
+.timermain{min-width:0;flex:1}
+.timerlabel{font-size:12px;font-weight:620;color:#b6e0d5;margin:0 0 3px;letter-spacing:.025em}
+.countdown-value{white-space:nowrap;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",sans-serif;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;font-size:clamp(48px,4.55vw,72px);font-weight:700;line-height:1.06;letter-spacing:-.07em;color:var(--timer-accent);transition:color .2s}
+.countdown-value.long-countdown{font-size:clamp(37px,3.3vw,53px);letter-spacing:-.055em}
+.timeraside{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-end;gap:6px;padding-bottom:6px;color:#c6e1da}
+.timeraside span{font-size:10.5px;color:#b6d6d0}.timeraside strong{font-size:14px;font-weight:650;letter-spacing:.015em;font-variant-numeric:tabular-nums;white-space:nowrap;color:#f2fcf7}
+.timer-progress-meta{display:flex;justify-content:space-between;gap:9px;align-items:center;font-size:10.5px;color:#c3e0d8;font-variant-numeric:tabular-nums}
+.currentcard .progressbar{height:6px;margin:8px 0 0;border-radius:9px;background:#f3fff13b}
+.currentcard .progressbar i{background:var(--timer-fill);transition:width .7s linear,background .3s ease}
+.currentcard[data-urgency="soon"]{--timer-accent:#ffe6b7;--timer-fill:#efc48a}
+.currentcard[data-urgency="urgent"]{--timer-accent:#ffbf9c;--timer-fill:#f2a278}
+.currentcard .upnext{margin-top:15px;padding-top:11px;display:flex;align-items:baseline;gap:10px;line-height:1.4;font-size:12px;color:#f1fff8}
+.nextcaption{font-size:10px;white-space:nowrap;font-weight:590;letter-spacing:.06em;color:#b8dad0;flex-shrink:0}
+#nexttask{overflow-wrap:anywhere;font-weight:570}
+@media(max-width:1240px){.currentcard{padding:18px 16px;min-height:284px}.countdown-value{font-size:clamp(43px,4.5vw,64px)}.countdown-value.long-countdown{font-size:clamp(32px,3.3vw,47px)}.timeraside strong{font-size:12px}.currentcard .taskname{font-size:clamp(19px,1.9vw,25px)}}
+@media(max-width:1020px){.currentcard{padding:17px 13px}.countdown-value{font-size:46px}.countdown-value.long-countdown{font-size:33px}.timeraside strong{font-size:11px}.timerrow{gap:4px}}
+@media(max-width:620px){.currentcard{min-height:0}.countdown-value{font-size:clamp(55px,12vw,70px)}.countdown-value.long-countdown{font-size:clamp(40px,9vw,52px)}}
+
+@media (min-width:621px) and (max-height:840px){
+ .workspace{padding-top:16px;padding-bottom:12px}
+ .topbar{height:39px;margin-bottom:10px}
+ .overview{gap:10px}
+ .clockbox{padding:8px 5px 5px}
+ .clock{font-size:clamp(62px,7vw,90px);margin-top:4px}
+ .clockhint{margin-top:4px}
+ .currentcard{padding-top:15px;padding-bottom:13px;min-height:0}
+ .currentcard .taskname{margin-top:8px}
+ .timerrow{margin-top:11px;margin-bottom:8px}
+ .currentcard .upnext{margin-top:10px;padding-top:8px}
+ .subjectcard{padding-top:10px;padding-bottom:10px}
+ .progress-title{margin:0 2px -3px}
+}
+</style></head>
+<body><main id="desk"><div class="workspace"><header class="topbar"><div class="brand"><span class="brand-icon" aria-hidden="true"><svg class="brand-symbol" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" focusable="false"><circle cx="29.5" cy="16.5" r="8" fill="#F6BF7B"/><path d="M8.5 29.2H39.5" stroke="#ECFFF6" stroke-width="3.3" stroke-linecap="round"/><path d="M9 38.2C15.5 37.2 21 33.6 26.8 33.6H38.5" fill="none" stroke="#A9E1D1" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><h1>逐日</h1><p>STUDY DESK · 2026</p></div></div><div id="topdate" class="topdate">周一至周日 · 专升本备考</div></header>
+<div class="grid"><section class="overview" aria-label="学习状态"><div class="clockbox"><div id="hello" class="hello">今天，也在朝目标前进</div><div class="clock"><span id="clock">00:00</span><small id="seconds">00</small></div><div class="clockhint" id="daytext">正在读取时间</div></div>
+<div class="currentcard" id="currentcard" data-urgency="normal">
+  <div class="eyebrow active-line"><span class="signal"></span><span id="status">正在进行</span></div>
+  <div class="taskname" id="taskname">正在读取计划</div>
+  <div class="tasktime" id="tasktime"></div>
+  <div class="timerrow" aria-label="当前时段倒计时">
+    <div class="timermain">
+      <div class="timerlabel" id="timerlabel">剩余时间</div>
+      <div class="countdown-value" id="timeleft" role="timer" aria-live="off">--:--</div>
+    </div>
+    <div class="timeraside"><span id="deadline-label">结束于</span><strong id="deadline">--:--</strong></div>
+  </div>
+  <div class="timer-progress-meta"><span id="elapsed-label">本段已进行 0%</span><span id="duration-label">时段进度</span></div>
+  <div class="progressbar" id="timerprogress" role="progressbar" aria-label="本时段已经过去的时间比例" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="timerline"></i></div>
+  <div class="upnext"><span class="nextcaption">接下来</span><span id="nexttask">正在读取下一项</span></div>
+</div>
+<div class="progress-title"><span>科目进度</span><span class="progress-sub">点按卡片查看学习路线</span></div><div class="subjectcards"><button class="subjectcard" data-subject="mock"><span class="glyph">◈</span><span class="subjectname">模拟电子技术</span><span id="mocknum" class="ratio">0 / 69</span><span class="mini-progress"><i id="mockbar"></i></span></button><button class="subjectcard circuit" data-subject="circuit"><span class="glyph">◎</span><span class="subjectname">电路</span><span id="circuitnum" class="ratio">0 / 6</span><span class="mini-progress"><i id="circuitbar"></i></span></button></div></section>
+<section class="panel" aria-label="同一张卡片内的学习时间表与学习任务"><div class="panel-head" id="panelhead"></div><div class="panel-body" id="panelbody"></div><div class="panel-foot" id="panelfoot"></div></section></div>
+<footer class="bottomline"><span>安徽工业大学 · 2026 专升本</span><span class="note">日有所学 · 慢慢向前</span></footer>
+</div><button id="space-resizer" type="button" aria-label="拖动调节右侧桌面留白宽度，左右方向键微调，双击恢复默认" role="slider" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="45" aria-valuenow="29" aria-valuetext="留白占屏幕29%"><span class="grip-core" aria-hidden="true"></span></button></main><div id="toast" role="status" aria-live="polite"></div><input id="importFile" type="file" accept="application/json,.json" hidden>
+<script>
+/* DATA_FROM_PREVIOUS_VERSION */
+
+'use strict';
+const KEY='zhuri-anhui-study-v1';
+const videoTitles=[
+'本征半导体杂质半导体','PN结的形成与半导体二极管','二极管微变等效电路（建议结合郑益慧老师的一起看）','稳压二极管',
+'三极管的结构以及电流放大倍数','三极管特性曲线第一部分','三极管特性曲线第二部分',
+'放大的基本概念','构成一个放大电路的思路','为什么要设置静态工作点','两种实用放大电路','直流通路与交流通路',
+'h参数等效模型','输入输出电阻含义以及放大电路分析','静态工作点的稳定','静态工作点稳定电路Q点的计算','静态工作点稳定电路动态参数计算','共集放大电路的分析','共基放大电路的分析','三极管构成的三种放大电路小总结',
+'差分放大电路共模增益','差分放大电路差模增益','差分放大电路分析实例','单端输出电路静态工作点的求解','单端输出电路增益求解','单入双出电路分析','单入单出电路分析',
+'镜像电流源','比例电流源','微电流源','改进的镜像电流源电路','集成运放的构成及电压传输特性',
+'反馈的基本概念','有无反馈的判断','正负反馈的判断','交直流反馈的判断','反馈组态','反馈组态1','组态判断例题','负反馈放大电路的框图','深度负反馈放大电路放大倍数的分析','深度负反馈放大电路放大倍数的分析续','放大倍数求解例题','负反馈对输入电阻的影响','负反馈对输出电阻的影响','负反馈对输出电阻的影响续',
+'反相比例运算电路','反相比例运算电路改进和同相比例运算电路','反相求和运算电路','同相求和运算电路','加减运算电路','积分运算电路','微分运算电路','微积分运算电路两道例题',
+'正弦波震荡电路概述','RC正弦波震荡电路','LC震荡电路','LC震荡电路1','LC震荡电路2','LC震荡电路3','LC震荡电路4',
+'比较器','单限比较器','滞回比较器','窗口比较器','方波发生电路','方波发生电路续','矩形波发生电路','三角波发生电路'
+];
+const stages=[
+{name:'二极管基础',ids:range(1,4),section:'第1章 · 半导体二极管及其基本应用电路',pages:'课本第1～27页'},
+{name:'三极管与放大电路',ids:range(5,20),section:'第2章 · 半导体三极管及其基本放大电路',pages:'课本第32～74页'},
+{name:'差分放大与电流源',ids:range(21,32),section:'第4章 4.2～4.5 · 差分放大、恒流源、集成运放',pages:'课本第105～128页'},
+{name:'运算放大器的基本运算',ids:range(47,54),section:'第4章 4.5 · 基本运算电路',pages:'课本第119～128页'},
+{name:'反馈与深度负反馈',ids:range(33,46),section:'第5章 · 负反馈放大电路',pages:'课本第134～149页'},
+{name:'电压比较器',ids:range(62,65),section:'第7章 7.2 · 非正弦信号发生电路（比较器）',pages:'课本第194页起'},
+{name:'正弦波振荡',ids:range(55,61),section:'第7章 7.1 · 正弦波振荡电路',pages:'课本第179～193页'},
+{name:'波形发生电路',ids:range(66,69),section:'第7章 7.2 · 方波、矩形波与三角波发生',pages:'课本第198页起'}
+];
+const circuitUnits=[
+{name:'电路的基本概念和定律',detail:'电路及电路模型；电压、电流、电功率；电阻、电容、电感；电压源与电流源；电源等效变换、无源网络化简；基尔霍夫定律；含受控源二端电路分析。'},
+{name:'直流电路分析',detail:'支路电流法、叠加定理、戴维南定理、诺顿定理、节点分析法、网孔分析法。'},
+{name:'正弦交流电路',detail:'正弦量及其相量表示；基本定律的相量形式；复阻抗、复导纳；相量法；瞬时功率、平均功率、功率因数、无功功率、复功率及功率因数提高。'},
+{name:'谐振与互感电路',detail:'串、并联谐振的概念与条件；耦合电感电路分析；理想变压器的电压电流关系与阻抗变换。'},
+{name:'三相电路',detail:'三相交流电动势；三相电源联结、线电压与相电压；对称三相电路的电压、电流、功率计算。'},
+{name:'动态电路的时域分析',detail:'换路定律及初始条件；一阶电路零输入、零状态和全响应；时间常数；三要素法。'}
+];
+const defaultSchedule=[
+{"id":"x1","start":"07:00","end":"07:30","title":"起床、洗漱、早餐","subject":"生活","type":"life","desc":"整理好当天学习用品","days":[0,1,2,3,4,5,6]},
+{"id":"x2","start":"07:30","end":"08:00","title":"背英语新单词","subject":"英语","type":"study","desc":"新词记忆，配合例句","days":[0,1,2,3,4,5,6]},
+{"id":"x3","start":"08:00","end":"10:00","title":"学习高数","subject":"高数","type":"study","desc":"新知识、例题和练习题","days":[0,1,2,3,4,5,6]},
+{"id":"x4","start":"10:00","end":"10:15","title":"短休息","subject":"休息","type":"break","desc":"离开座位、喝水、活动肩颈，15分钟即可","days":[0,1,2,3,4,5,6]},
+{"id":"x4b","start":"10:15","end":"10:30","title":"高数知识点复盘","subject":"高数","type":"study","desc":"用15分钟回顾两小时高数里的公式、错题和重点","days":[0,1,2,3,4,5,6]},
+{"id":"x5","start":"10:30","end":"11:30","title":"学习英语","subject":"英语","type":"study","desc":"语法和阅读","days":[0,1,2,3,4,5,6]},
+{"id":"x6","start":"11:30","end":"12:00","title":"复习早上的单词","subject":"英语","type":"study","desc":"遮住释义回忆词义","days":[0,1,2,3,4,5,6]},
+{"id":"x7","start":"12:00","end":"13:00","title":"午餐、午休","subject":"休息","type":"break","desc":"用餐并休息","days":[0,1,2,3,4,5,6]},
+{"id":"x8","start":"13:00","end":"13:30","title":"复习旧单词","subject":"英语","type":"study","desc":"复习前几天的单词","days":[0,1,2,3,4,5,6]},
+{"id":"x9","start":"13:30","end":"15:30","title":"学习模电","subject":"模拟电子技术","type":"study","desc":"知识点学习和对应习题；继续下一个未完成视频","days":[0,1,2,3,4,5,6]},
+{"id":"x10","start":"15:30","end":"16:00","title":"整理当天错题","subject":"综合","type":"study","desc":"归纳四科错题和原因","days":[0,1,2,3,4,5,6]},
+{"id":"x11","start":"16:00","end":"16:30","title":"复习英语单词和短语","subject":"英语","type":"study","desc":"当天单词回顾","days":[0,1,2,3,4,5,6]},
+{"id":"x12","start":"16:30","end":"17:00","title":"健身前准备、休息","subject":"生活","type":"life","desc":"准备运动用品并补充水分","days":[0,1,2,3,4,5,6]},
+{"id":"x13","start":"17:00","end":"19:30","title":"健身、往返及洗澡","subject":"运动","type":"life","desc":"安排2.5小时，包含往返和洗澡","days":[0,1,2,3,4,5,6]},
+{"id":"x14","start":"19:30","end":"20:30","title":"晚餐、休息","subject":"生活","type":"life","desc":"用餐和放松","days":[0,1,2,3,4,5,6]},
+{"id":"x15","start":"20:30","end":"22:30","title":"学习电路","subject":"电路","type":"study","desc":"知识点学习和练习题","days":[0,1,2,3,4,5,6]},
+{"id":"x16","start":"22:30","end":"23:00","title":"放松、洗漱、准备次日","subject":"生活","type":"life","desc":"为睡前留出半小时","days":[0,1,2,3,4,5,6]},
+{"id":"x17","start":"23:00","end":"07:00","title":"睡眠","subject":"睡眠","type":"break","desc":"保证八小时睡眠（跨午夜）","days":[0,1,2,3,4,5,6]}
+];
+
+const SUBJECTS=['高数','英语','模拟电子技术','电路','综合','运动','生活','休息','睡眠'];
+function range(a,b){return Array.from({length:b-a+1},(_,i)=>i+a)}
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function pad(n){return String(n).padStart(2,'0')}
+function dayKey(d=new Date()){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function tod(t){let [h,m]=t.split(':').map(Number);return h*60+m}
+function diff(t){let d=tod(t.end)-tod(t.start);return d<=0?d+1440:d}
+function todayTasks(day=new Date().getDay()){return (state.schedule||[]).filter(t=>t.days?.includes(day)&&diff(t)>0).sort((a,b)=>tod(a.start)-tod(b.start))}
+function currentTimeline(now=new Date()){let m=now.getHours()*60+now.getMinutes(),day=now.getDay(),previous=(day+6)%7,tasks=todayTasks(day);let cur=tasks.find(t=>tod(t.end)>tod(t.start)&&tod(t.start)<=m&&m<tod(t.end))||tasks.find(t=>tod(t.end)<tod(t.start)&&m>=tod(t.start))||todayTasks(previous).find(t=>tod(t.end)<tod(t.start)&&m<tod(t.end));let next=tasks.find(t=>tod(t.start)>m);if(!next)next=todayTasks((day+1)%7)[0];return {tasks,cur,next}}
+function readState(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){return {}}}
+const stored=readState();
+const state={checkedVideos:Array.isArray(stored.checkedVideos)?stored.checkedVideos:[],checkedCircuit:Array.isArray(stored.checkedCircuit)?stored.checkedCircuit:[],dailyChecks:stored.dailyChecks&&typeof stored.dailyChecks==='object'?stored.dailyChecks:{},videoTitles:stored.videoTitles&&typeof stored.videoTitles==='object'?stored.videoTitles:{},schedule:Array.isArray(stored.schedule)?stored.schedule:clone(defaultSchedule),taskNotes:stored.taskNotes&&typeof stored.taskNotes==='object'?stored.taskNotes:{},blankPercent:Number.isFinite(Number(stored.blankPercent))?Number(stored.blankPercent):29};
+// Migrate only a recognizably unchanged 30-minute morning break; never rewrite user customized times.
+if(Array.isArray(stored.schedule)&&state.schedule.some(t=>t.id==='x4'&&t.start==='10:00'&&t.end==='10:30'&&t.title==='休息'&&t.desc==='离开座位，活动一下')&&!state.schedule.some(t=>t.id==='x4b')){
+ const i=state.schedule.findIndex(t=>t.id==='x4');state.schedule[i]={...state.schedule[i],end:'10:15',title:'短休息',desc:'离开座位、喝水、活动肩颈，15分钟即可'};
+ state.schedule.splice(i+1,0,clone(defaultSchedule.find(t=>t.id==='x4b')));
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){toast('当前浏览器可能无法保存，请导出备份')}}
+function toast(str){let el=document.getElementById('toast');el.textContent=str;el.classList.add('visible');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('visible'),2450)}
+const order=stages.flatMap(s=>s.ids);const done=(id)=>state.checkedVideos.includes(id);const videoTitle=id=>state.videoTitles[id]||videoTitles[id-1]||'待核对的视频标题';
+// 卡片内部使用固定的父子导航，不再把相同页面无限压入历史栈。
+// 相同目标的重复点击属于幂等操作；返回一次只退出一个真正的层级。
+const rootNav=()=>({view:'schedule',subject:null,stage:null,task:null,unit:null,editing:null,confirm:null});
+let nav=rootNav();
+function goto(view,fields={}){
+ const next={...rootNav(),view,...fields};
+ if(view==='stage')next.subject='mock';
+ if(view==='unit')next.subject='circuit';
+ if(view==='confirm'&&fields.editing===undefined)next.editing=nav.editing;
+ if(Object.keys(next).every(key=>next[key]===nav[key]))return;
+ nav=next;
+ renderCard();
+}
+function back(){
+ switch(nav.view){
+   case 'stage':return goto('subject',{subject:'mock'});
+   case 'unit':return goto('subject',{subject:'circuit'});
+   case 'confirm':return nav.confirm==='delete' ? goto('edit',{editing:nav.editing}) : goto('planner');
+   case 'edit':return goto('planner');
+   default:return home();
+ }
+}
+function home(){nav=rootNav();renderCard()}
+function header(title,small='时间安排',actions=''){let root=nav.view==='schedule';return `${root?'':'<button class="backbtn" data-action="back" aria-label="返回上一层">←</button>'}<div class="panel-meta"><div class="panel-kicker">${safe(small)}</div><h2 class="panel-title">${safe(title)}</h2></div><div class="panel-side">${actions}</div>`}
+function info(kicker,title,detail){return `<div class="info"><span>${safe(kicker)}</span><h3>${safe(title)}</h3>${detail?`<p>${safe(detail)}</p>`:''}</div>`}
+function taskById(id){return state.schedule.find(t=>t.id===id)}
+function taskSubject(task){return task?.subject==='模拟电子技术'?'mock':task?.subject==='电路'?'circuit':null}
+function taskCheck(id){return (state.dailyChecks[dayKey()]||[]).includes(id)}
+function checkTask(id){let k=dayKey(),a=state.dailyChecks[k]||[];state.dailyChecks[k]=a.includes(id)?a.filter(x=>x!==id):[...a,id];save();refreshAll(true)}
+function mockCard(){let n=state.checkedVideos.filter(v=>v>=1&&v<=69).length;return `<div class="content">${info('69 节必学视频', `${n} / 69 已完成`,'按老师圈选内容学习；这里仅调整观看顺序，学习进度可以逐项打卡。')}<div class="blocktitle">零基础推荐顺序 · 共 8 个阶段</div>${stages.map((g,i)=>{let c=g.ids.filter(done).length;return `<button class="item" data-stage="${i}"><span class="number">${pad(i+1)}</span><span class="details"><b>${safe(g.name)}</b><small>${safe(g.section)} · 已完成 ${c}/${g.ids.length}</small></span><span class="arrow">›</span></button>`}).join('')}<div class="notice">提醒：学校考纲还包括“直流稳压电源”，但这69个视频标题中没有单独列出对应部分。</div></div>`}
+function circuitCard(){return `<div class="content">${info('学校官方考试大纲','电路 · 6个考核模块','根据安徽工业大学2026年专升本考试大纲整理；逐模块标记完成。')}<div class="blocktitle">学习顺序</div>${circuitUnits.map((g,i)=>`<button class="item ${state.checkedCircuit.includes(i)?'done':''}" data-unit="${i}"><span class="number">${pad(i+1)}</span><span class="details"><b>${safe(g.name)}</b><small>${safe(g.detail.slice(0,34))}…</small></span><span class="arrow">›</span></button>`).join('')}</div>`}
+function stageCard(i){let g=stages[i];if(!g)return '';let count=g.ids.filter(done).length;return `<div class="content">${info(`阶段 ${i+1} · ${count}/${g.ids.length} 已完成`,g.name,g.section+' · '+g.pages)}<div class="blocktitle">点击每节左侧方框打卡 · 按推荐观看顺序排列</div>${g.ids.map(id=>`<button class="item ${done(id)?'done':''}" data-video="${id}"><span class="checkbox">${done(id)?'✓':''}</span><span class="details"><b>第${id}节 · ${safe(videoTitle(id))}</b><small>${done(id)?'已完成 · 点击可取消':'未完成 · 点击标记为已学'}</small></span></button>`).join('')}</div>`}
+function unitCard(i){let g=circuitUnits[i];return `<div class="content">${info(`电路 · 第 ${i+1} 单元`,g.name,g.detail)}<div class="button-row"><button class="primary" data-unitcheck="${i}">${state.checkedCircuit.includes(i)?'✓ 已学完 · 撤销完成':'✓ 标记这个模块已完成'}</button></div><p class="notice">以指定课本为准：学完基础知识、例题和对应练习，再勾选完成。</p></div>`}
+function subTaskCard(t){let checked=taskCheck(t.id);let subject=taskSubject(t);let note=state.taskNotes[t.id]||'';return `<div class="content">${info(`${safe(t.start)}—${safe(t.end)} · ${safe(t.subject)}`,t.title,t.desc)}<div class="button-row"><button class="primary" data-taskcheck="${safe(t.id)}">${checked?'✓ 今日已完成 · 取消':'✓ 标记今天已完成'}</button><button class="secondary" data-edit="${safe(t.id)}">修改这个时段</button></div>${subject?`<button class="item" data-subject="${subject}"><span class="number">${subject==='mock'?'69':'6'}</span><span class="details"><b>查看${subject==='mock'?'模拟电子技术视频路线':'电路考纲模块'}</b><small>在同一张卡片内查看并打卡</small></span><span class="arrow">›</span></button>`:''}<div class="blocktitle">本时段备注</div><label class="field" style="margin-top:0"><textarea data-note="${safe(t.id)}" placeholder="例如：今天做了几道题、哪里还没搞懂">${safe(note)}</textarea></label>${t.type==='study'?`<div class="notice">小建议：连续专注约50～60分钟，可短暂活动5分钟；不必把每一次休息固定为半小时。</div>`:''}</div>`}
+function timetableCategory(t){
+ if(t.subject==='运动')return '运动';
+ if(t.subject==='睡眠')return '睡眠';
+ return t.type==='study'?'学习':t.type==='break'?'休息':'生活';
+}
+function timetableCategoryClass(t){return {学习:'study',休息:'break',生活:'life',运动:'exercise',睡眠:'sleep'}[timetableCategory(t)]||'life'}
+function timetableSubject(t){return ['生活','休息','睡眠','运动'].includes(t.subject)?'—':(t.subject==='模拟电子技术'?'模电':t.subject)}
+function hourDisplay(minutes){
+ // 时长显示：不足 1 小时显示分钟；1 小时及以上显示小时。
+ const m = Math.round(Number(minutes));
+ if (!Number.isFinite(m) || m < 0) return '—';
+ if (m < 60) return `${m}分钟`;
+ if (m % 15 === 0) return `${Number((m / 60).toFixed(2))}小时`;
+ const h = Math.floor(m / 60), rest = m % 60;
+ return rest ? `${h}小时${rest}分钟` : `${h}小时`;
+}
+function scheduleCard(){
+ let n=new Date(),{tasks,cur}=currentTimeline(n),completed=state.dailyChecks[dayKey(n)]||[];
+ let count=tasks.filter(t=>completed.includes(t.id)).length;
+ let rows=tasks.map(t=>{
+  let isNow=cur?.id===t.id,isDone=completed.includes(t.id),cat=timetableCategory(t);
+  return `<tr class="${isNow?'is-current':''} ${isDone?'is-checked':''}" data-task="${safe(t.id)}" tabindex="0" role="button" aria-label="查看 ${safe(t.start)} 至 ${safe(t.end)} ${safe(t.title)} 的学习内容">
+    <td class="time">${safe(t.start)}</td><td class="time">${safe(t.end)}</td>
+    <td class="arrange">${safe(t.title)}${isNow?'<span class="now-mark">· 现在</span>':isDone?'<span class="done-mark">✓</span>':''}</td>
+    <td class="cat ${timetableCategoryClass(t)}">${cat}</td>
+    <td class="subject">${safe(timetableSubject(t))}</td>
+    <td class="hours">${hourDisplay(diff(t))}</td>
+   </tr>`;
+ }).join('');
+ return {
+  head:header('专升本每日学习时间表','每日计划 · 周一至周日',`<button class="action" data-action="planner">调整日程</button>`),
+  body:tasks.length?`<table class="timetable" aria-label="专升本每日学习时间表"><colgroup><col class="col-time"><col class="col-time"><col class="col-arrange"><col class="col-category"><col class="col-subject"><col class="col-hours"></colgroup><thead><tr><th scope="col">开始时间</th><th scope="col">结束时间</th><th scope="col">安排</th><th scope="col">类别</th><th scope="col">科目</th><th scope="col">时长</th></tr></thead><tbody>${rows}</tbody></table>`:'<div class="timetable-empty">今天没有安排，点击右上角调整日程。</div>',
+  foot:`<span>每日固定 · 点击任意一行，在本卡片内查看学习内容</span><span style="margin-left:auto;white-space:nowrap">已完成 <strong>${count}/${tasks.length}</strong></span>`
+ };
+}
+function plannerCard(){let tasks=state.schedule.slice().sort((a,b)=>tod(a.start)-tod(b.start));return `<div class="content">${info('编辑计划','你的日常时间安排','修改的时间表会自动用于周一至周日；新增、删除、恢复都只在本卡片中完成。')}<div class="button-row"><button class="primary" data-action="add">＋ 新增时段</button><button class="secondary" data-action="backup">导出备份</button><button class="secondary" data-action="import">导入备份</button></div><div class="blocktitle">点击任意时段修改</div>${tasks.map(t=>`<button class="item" data-edit="${safe(t.id)}"><span class="number" style="font-size:11px;width:57px">${safe(t.start)}</span><span class="details"><b>${safe(t.title)}</b><small>${safe(t.start)}–${safe(t.end)} · ${safe(t.subject)}</small></span><span class="arrow">›</span></button>`).join('')}<div class="button-row"><button class="secondary danger" data-action="restore">恢复为新版推荐时间表</button></div></div>`}
+function editCard(){let t=taskById(nav.editing)||{title:'',start:'10:00',end:'10:15',subject:'高数',type:'study',desc:'',days:[0,1,2,3,4,5,6]};let options=SUBJECTS.map(x=>`<option value="${safe(x)}" ${t.subject===x?'selected':''}>${safe(x)}</option>`).join('');return `<div class="content"><div class="info"><span>仅修改本张时间表</span><h3>${nav.editing?'编辑时间段':'新增时间段'}</h3><p>每天固定作息。如需调整休息长度，直接改开始和结束时间即可。</p></div><form id="editform"><label class="field">安排名称<input name="title" value="${safe(t.title)}" required maxlength="65" placeholder="例如：学习模电"></label><div class="fields2"><label class="field">开始时间<input name="start" type="time" value="${safe(t.start)}" required></label><label class="field">结束时间<input name="end" type="time" value="${safe(t.end)}" required></label></div><label class="field">科目<select name="subject">${options}</select></label><label class="field">类型<select name="type"><option value="study" ${t.type==='study'?'selected':''}>学习</option><option value="break" ${t.type==='break'?'selected':''}>休息</option><option value="life" ${t.type==='life'?'selected':''}>日常生活</option></select></label><label class="field">备注<textarea name="desc" maxlength="240">${safe(t.desc)}</textarea></label><div class="button-row"><button class="primary" type="submit">保存时段</button>${nav.editing?'<button type="button" class="secondary danger" data-action="delete">删除这个时段</button>':''}</div></form><div id="editerror" class="validation" role="alert"></div></div>`}
+function confirmCard(){return `<div class="content"><div class="confirm">${nav.confirm==='restore'?'确定恢复默认时间表吗？这会覆盖你改过的时间安排，但不会清除视频打卡。':'确定删除这个时间段吗？删除后可以继续新增。'}</div><div class="button-row"><button class="primary" data-action="confirm">确认${nav.confirm==='restore'?'恢复':'删除'}</button><button class="secondary" data-action="back">取消</button></div></div>`}
+function genericCard(name){let tasks=todayTasks().filter(t=>t.subject===name);return `<div class="content">${info('每日安排',name,`今天共有 ${tasks.length} 个相关时段，按实际进度学习即可。`)}${tasks.map(t=>`<button class="item" data-task="${safe(t.id)}"><span class="number" style="width:56px;font-size:11px">${t.start}</span><span class="details"><b>${safe(t.title)}</b><small>${safe(t.desc||'')}</small></span><span class="arrow">›</span></button>`).join('')}</div>`}
+function renderCard(keepScroll=false){let head='',body='',foot='';let sc=document.getElementById('panelbody');let prev=keepScroll?sc.scrollTop:0;let v=nav.view;
+ if(v==='schedule'){({head,body,foot}=scheduleCard())}
+ else if(v==='subject'){let isM=nav.subject==='mock';head=header(isM?'模拟电子技术':'电路','LEARNING PATH',isM?`${state.checkedVideos.length}/69`:`${state.checkedCircuit.length}/6`);body=isM?mockCard():circuitCard();foot=isM?'69节视频 · 按老师圈选清单排序并分阶段学习':'学校考纲 · 6个知识模块'}
+ else if(v==='stage'){let g=stages[nav.stage];head=header(g.name,'VIDEO LESSONS',`${g.ids.filter(done).length}/${g.ids.length}`);body=stageCard(nav.stage);foot='点击视频即可打卡 · 勾选状态自动保存'}
+ else if(v==='unit'){head=header(circuitUnits[nav.unit].name,'CIRCUIT BASICS');body=unitCard(nav.unit);foot='本模块学完后标记完成'}
+ else if(v==='task'){let t=taskById(nav.task);head=header(t?.title||'任务已删除','TODAY TASK');body=t?subTaskCard(t):'<div class="content">这个时段已经不存在。</div>';foot='日程打卡与视频打卡相互独立'}
+ else if(v==='planner'){head=header('调整日程','SCHEDULE SETTINGS');body=plannerCard();foot='每天重复 · 周一到周日'}
+ else if(v==='edit'){head=header(nav.editing?'编辑时间段':'新增时间段','EDIT ROUTINE');body=editCard();foot='修改后立即更新今日状态'}
+ else if(v==='confirm'){head=header('请确认','ONE MORE STEP');body=confirmCard();foot='不会删除已完成的视频记录'}
+ else if(v==='generic'){head=header(nav.subject,'STUDY SUBJECT');body=genericCard(nav.subject);foot='请按实际进度安排学习'}
+ document.querySelector('.panel').classList.toggle('schedule-view',v==='schedule');document.getElementById('panelhead').innerHTML=head;sc.innerHTML=body;document.getElementById('panelfoot').innerHTML=foot;sc.scrollTop=keepScroll?prev:0;
+}
+// 真实的逐秒倒计时。跨午夜的睡眠时段按日期处理，避免出现负数、重复倒计时。
+function segmentClock(now=new Date()){
+ const {cur,next}=currentTimeline(now);
+ if(cur){
+  const start=new Date(now.getFullYear(),now.getMonth(),now.getDate(),Math.floor(tod(cur.start)/60),tod(cur.start)%60);
+  // 23:00—07:00: 凌晨属于昨天开始的时段。
+  if(tod(cur.end)<=tod(cur.start)&&now<start)start.setDate(start.getDate()-1);
+  const duration=diff(cur)*60000;
+  const end=new Date(start.getTime()+duration);
+  return {cur,next,seconds:Math.max(0,Math.ceil((end-now)/1000)),progress:Math.max(0,Math.min(100,(now-start)/duration*100)),endLabel:cur.end};
+ }
+ if(next){
+  const begin=new Date(now.getFullYear(),now.getMonth(),now.getDate(),Math.floor(tod(next.start)/60),tod(next.start)%60);
+  if(begin<=now)begin.setDate(begin.getDate()+1);
+  return {cur:null,next,seconds:Math.max(0,Math.ceil((begin-now)/1000)),progress:0,endLabel:next.start};
+ }
+ return {cur:null,next:null,seconds:0,progress:0,endLabel:'--:--'};
+}
+function readableCountdown(seconds){
+ const sec=Math.max(0,Math.floor(seconds)),hours=Math.floor(sec/3600),minutes=Math.floor((sec%3600)/60),last=sec%60;
+ return hours?`${pad(hours)}:${pad(minutes)}:${pad(last)}`:`${pad(minutes)}:${pad(last)}`;
+}
+function refreshCountdown(now=new Date()){
+ const {cur,next,seconds,progress,endLabel}=segmentClock(now),current=cur||next;
+ const card=document.getElementById('currentcard');
+ document.getElementById('status').textContent=cur?'正在进行':next?'即将开始':'今日已完成';
+ document.getElementById('taskname').textContent=current?current.title:'暂无安排';
+ document.getElementById('tasktime').textContent=current?`${current.start}—${current.end} · ${current.subject}`:'请在时间表中添加安排';
+ document.getElementById('timerlabel').textContent=cur?'剩余时间':next?'距离开始':'今日任务';
+ const display=document.getElementById('timeleft');
+ display.textContent=current?readableCountdown(seconds):'00:00';
+ display.classList.toggle('long-countdown',seconds>=3600);
+ document.getElementById('deadline-label').textContent=cur?'结束于':'开始于';
+ document.getElementById('deadline').textContent=endLabel;
+ const rounded=Math.round(progress);
+ document.getElementById('elapsed-label').textContent=cur?`已进行 ${rounded}%`:next?'等待下一项开始':'今日时间表已结束';
+ document.getElementById('duration-label').textContent=cur?`总计 ${hourDisplay(diff(cur))}`:'';
+ const bar=document.getElementById('timerprogress');
+ bar.setAttribute('aria-valuenow',String(rounded));
+ document.getElementById('timerline').style.width=progress+'%';
+ card.dataset.urgency=cur&&seconds<=600?'urgent':cur&&seconds<=1800?'soon':'normal';
+ document.getElementById('nexttask').textContent=next?`${next.start} · ${next.title}`:'今天的计划已结束';
+}
+function refreshAll(keepScroll=false){
+ const n=new Date();
+ document.getElementById('clock').textContent=pad(n.getHours())+':'+pad(n.getMinutes());
+ document.getElementById('seconds').textContent=pad(n.getSeconds());
+ document.getElementById('daytext').textContent=n.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+ document.getElementById('hello').textContent=n.getHours()<12?'早上好 · 今天也要稳稳向前':n.getHours()<18?'下午好 · 保持自己的节奏':'晚上好 · 今天也很努力';
+ refreshCountdown(n);
+ document.getElementById('mocknum').textContent=state.checkedVideos.filter(v=>v>=1&&v<=69).length+' / 69 视频';
+ document.getElementById('mockbar').style.width=(state.checkedVideos.length/69*100)+'%';
+ document.getElementById('circuitnum').textContent=state.checkedCircuit.length+' / 6 模块';
+ document.getElementById('circuitbar').style.width=(state.checkedCircuit.length/6*100)+'%';
+ if(['schedule','stage','subject','unit'].includes(nav.view))renderCard(keepScroll);
+}
+
+function exportBackup(){let b=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),...state},null,2)],{type:'application/json'});let url=URL.createObjectURL(b);let a=document.createElement('a');a.href=url;a.download='逐日学习进度备份_'+dayKey()+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('学习计划已导出')}
+document.getElementById('importFile').addEventListener('change',async e=>{let file=e.target.files?.[0];if(!file)return;try{let obj=JSON.parse(await file.text());if(!obj||!Array.isArray(obj.schedule)||!Array.isArray(obj.checkedVideos))throw Error('无效备份');for(let key of ['checkedVideos','checkedCircuit','dailyChecks','videoTitles','schedule','taskNotes','blankPercent'])if(obj[key]!==undefined)state[key]=clone(obj[key]);save();home();refreshAll();applyBlankWidth(state.blankPercent);toast('备份导入完成')}catch(err){toast('导入失败：文件格式不正确')}e.target.value=''});
+document.getElementById('desk').addEventListener('click',e=>{let b=e.target.closest('button, tr[data-task]');if(!b)return;
+ if(b.dataset.action){let a=b.dataset.action;if(a==='back')return back();if(a==='planner')return goto('planner');if(a==='add')return goto('edit',{editing:null});if(a==='restore')return goto('confirm',{confirm:'restore'});if(a==='delete')return goto('confirm',{confirm:'delete',editing:nav.editing});if(a==='backup')return exportBackup();if(a==='import')return document.getElementById('importFile').click();if(a==='confirm'){if(nav.confirm==='restore')state.schedule=clone(defaultSchedule);else state.schedule=state.schedule.filter(t=>t.id!==nav.editing);save();home();refreshAll();toast('日程已更新');return}}
+ if(b.dataset.subject){return goto('subject',{subject:b.dataset.subject})}
+ if(b.dataset.stage!==undefined){return goto('stage',{stage:Number(b.dataset.stage)})}
+ if(b.dataset.unit!==undefined){return goto('unit',{unit:Number(b.dataset.unit)})}
+ if(b.dataset.video!==undefined){let id=Number(b.dataset.video);state.checkedVideos=done(id)?state.checkedVideos.filter(v=>v!==id):[...state.checkedVideos,id];save();refreshAll(true);toast(done(id)?'视频已标记完成':'已取消视频完成状态');return}
+ if(b.dataset.unitcheck!==undefined){let i=Number(b.dataset.unitcheck);state.checkedCircuit=state.checkedCircuit.includes(i)?state.checkedCircuit.filter(v=>v!==i):[...state.checkedCircuit,i];save();refreshAll(true);toast('模块学习状态已更新');return}
+ if(b.dataset.taskcheck){checkTask(b.dataset.taskcheck);renderCard(true);toast(taskCheck(b.dataset.taskcheck)?'本时段已打卡':'已取消本时段打卡');return}
+ if(b.dataset.task){let t=taskById(b.dataset.task);let s=taskSubject(t);return goto(s?'subject':'task',s?{subject:s,task:t.id}:{task:t.id})}
+ if(b.dataset.edit){return goto('edit',{editing:b.dataset.edit})}
+ });
+document.getElementById('desk').addEventListener('keydown',e=>{
+ const row=e.target.closest('tr[data-task]');
+ if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();row.click()}
+});
+document.getElementById('desk').addEventListener('input',e=>{let id=e.target.dataset.note;if(id){state.taskNotes[id]=e.target.value;save()}});
+document.getElementById('desk').addEventListener('submit',e=>{if(e.target.id!=='editform')return;e.preventDefault();let data=new FormData(e.target);let title=(data.get('title')||'').trim(),start=data.get('start'),end=data.get('end');let error=document.getElementById('editerror');if(!title||!start||!end){error.textContent='请填写名称和时间';return}if(start===end){error.textContent='结束时间需要不同于开始时间';return}let subject=data.get('subject'),type=data.get('type'),desc=(data.get('desc')||'').trim();let item={id:nav.editing||('u'+Date.now()),title,start,end,subject,type,desc,days:[0,1,2,3,4,5,6]};if(nav.editing){let idx=state.schedule.findIndex(t=>t.id===nav.editing);if(idx>=0){item.days=state.schedule[idx].days||item.days;state.schedule[idx]=item}else state.schedule.push(item)}else state.schedule.push(item);save();home();refreshAll();toast('日程已保存')});
+// Vertical wheel/touch scrolling in the card is intentional; no horizontal swiping, slide carousels, or page navigation.
+let lastMinute='';setInterval(()=>{const now=new Date(),k=dayKey(now)+' '+pad(now.getHours())+':'+pad(now.getMinutes());if(k!==lastMinute){lastMinute=k;refreshAll(true)}else{document.getElementById('seconds').textContent=pad(now.getSeconds());refreshCountdown(now)}},1000);
+refreshAll();
+
+// The divider only changes reserved Finder desktop space; card navigation/scrolling are untouched.
+const grip=document.getElementById('space-resizer');
+const desk=document.getElementById('desk');
+const DEFAULT_BLANK_PERCENT=29;
+function blankMin(){return 0}
+function blankMax(){
+ const w=window.innerWidth;
+ const minimumContent=w>=1240?810:w>=1020?715:650;
+ return Math.min(45,Math.max(blankMin(),(w-minimumContent)/w*100));
+}
+function applyBlankWidth(p,commit=false){
+ const numeric=Number(p);
+ let max=blankMax(),percentage=Math.min(max,Math.max(blankMin(),Number.isFinite(numeric)?numeric:DEFAULT_BLANK_PERCENT));
+ // At the screen edge, snap the remaining sub-percent sliver entirely shut.
+ if(percentage<0.75)percentage=0;
+ state.blankPercent=Math.round(percentage*10)/10;
+ desk.style.setProperty('--side-gap',state.blankPercent+'vw');
+ // vw values track the window width; zero blank area allows the handle to reach the right edge.
+ grip.setAttribute('aria-valuenow',String(Math.round(state.blankPercent)));
+ grip.setAttribute('aria-valuemax',String(Math.round(max)));
+ grip.setAttribute('aria-valuetext','留白占屏幕'+Math.round(state.blankPercent)+'%');
+ if(commit) save();
+}
+let gripPointer=null,gripStart=null;
+grip.addEventListener('pointerdown',e=>{
+ if(e.button!==0)return;
+ e.preventDefault();
+ gripPointer=e.pointerId;
+ gripStart={x:e.clientX,p:state.blankPercent};
+ grip.classList.add('dragging');
+ desk.classList.add('dragging-space');
+ grip.setPointerCapture(e.pointerId);
+});
+grip.addEventListener('pointermove',e=>{
+ if(e.pointerId!==gripPointer||!gripStart)return;
+ // Dragging right increases study panel width and can eliminate the blank area.
+ const newPercent=gripStart.p-(e.clientX-gripStart.x)/window.innerWidth*100;
+ applyBlankWidth(newPercent);
+});
+function finishGrip(e){
+ if(e.pointerId!==gripPointer)return;
+ gripPointer=null;gripStart=null;
+ grip.classList.remove('dragging');desk.classList.remove('dragging-space');
+ applyBlankWidth(state.blankPercent,true);
+}
+grip.addEventListener('pointerup',finishGrip);
+grip.addEventListener('pointercancel',finishGrip);
+grip.addEventListener('lostpointercapture',finishGrip);
+grip.addEventListener('keydown',e=>{
+ const step=e.shiftKey?5:1;
+ if(e.key==='ArrowLeft'){e.preventDefault();applyBlankWidth(state.blankPercent+step,true)}
+ else if(e.key==='ArrowRight'){e.preventDefault();applyBlankWidth(state.blankPercent-step,true)}
+ else if(e.key==='Home'){e.preventDefault();applyBlankWidth(blankMax(),true)}
+ else if(e.key==='End'){e.preventDefault();applyBlankWidth(blankMin(),true)}
+});
+grip.addEventListener('dblclick',()=>{applyBlankWidth(DEFAULT_BLANK_PERCENT,true);toast('留白宽度已恢复默认')});
+window.addEventListener('resize',()=>applyBlankWidth(state.blankPercent));
+applyBlankWidth(state.blankPercent);
+</script></body></html>
