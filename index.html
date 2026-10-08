@@ -199,9 +199,9 @@
  .subjectcard{padding-top:10px;padding-bottom:10px}
  .progress-title{margin:0 2px -3px}
 }
-/* 右侧时间表保持宽高，按左侧科目进度卡片的实际底边自动定位。 */
+/* 右侧整张时间表保持宽高，整体上下移动到与左侧科目进度卡片底边齐平。 */
 @media (min-width:621px){
- .grid > .panel{align-self:start;height:var(--schedule-panel-height,100%);transform:translateY(var(--schedule-panel-shift,-18px))}
+ .grid > .panel{align-self:start;height:var(--schedule-panel-height,100%);transform:translateY(var(--schedule-panel-shift,-12px))}
 }
 </style></head>
 <body><main id="desk"><div class="workspace"><header class="topbar"><div class="brand"><span class="brand-icon" aria-hidden="true"><svg class="brand-symbol" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" focusable="false"><circle cx="29.5" cy="16.5" r="8" fill="#F6BF7B"/><path d="M8.5 29.2H39.5" stroke="#ECFFF6" stroke-width="3.3" stroke-linecap="round"/><path d="M9 38.2C15.5 37.2 21 33.6 26.8 33.6H38.5" fill="none" stroke="#A9E1D1" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><h1>逐日</h1><p>STUDY DESK · 2026</p></div></div><div id="topdate" class="topdate">周一至周日 · 每日学习</div></header>
@@ -531,16 +531,20 @@ const schedulePanel=document.querySelector('.grid > .panel');
 const subjectCards=document.querySelector('.overview .subjectcards');
 const scheduleGrid=document.querySelector('.grid');
 function alignSchedulePanel(){
- if(window.innerWidth<=620){schedulePanel.style.removeProperty('--schedule-panel-height');schedulePanel.style.removeProperty('--schedule-panel-shift');return}
+ if(window.innerWidth<=620){
+  schedulePanel.style.removeProperty('--schedule-panel-height');
+  schedulePanel.style.removeProperty('--schedule-panel-shift');
+  return;
+ }
  const gridRect=scheduleGrid.getBoundingClientRect();
- const panelTop=gridRect.top; // 顶部保持在原始网格位置，只收短下边缘
- const targetBottom=subjectCards.getBoundingClientRect().bottom+12;
- const availableHeight=gridRect.bottom-panelTop;
- const height=Math.max(0,Math.min(availableHeight,targetBottom-panelTop));
+ const targetBottom=subjectCards.getBoundingClientRect().bottom;
+ // 保留当前时间表的既定高度（比科目进度区底部多 12px），不修改宽高规则。
+ const height=Math.max(0,Math.min(gridRect.height,targetBottom+12-gridRect.top));
  schedulePanel.style.setProperty('--schedule-panel-height',Math.round(height)+'px');
- // 布局高度仍由原有逻辑决定；只通过 transform 移动整个卡片，不调整它的尺寸。
- const panelBottomBeforeShift=gridRect.top+schedulePanel.offsetHeight;
- const shift=Math.round(subjectCards.getBoundingClientRect().bottom-panelBottomBeforeShift);
+ // 先清空旧位移，再以实际绘制出的底边计算偏移，避免旧 transform 和 offsetHeight 造成偏差。
+ schedulePanel.style.setProperty('--schedule-panel-shift','0px');
+ const renderedBottom=schedulePanel.getBoundingClientRect().bottom;
+ const shift=Math.round(targetBottom-renderedBottom);
  schedulePanel.style.setProperty('--schedule-panel-shift',shift+'px');
 }
 if('ResizeObserver' in window){
@@ -549,5 +553,7 @@ if('ResizeObserver' in window){
  layoutObserver.observe(subjectCards);
 }
 window.addEventListener('resize',alignSchedulePanel);
+window.addEventListener('load',alignSchedulePanel);
 alignSchedulePanel();
+requestAnimationFrame(alignSchedulePanel);
 </script></body></html>
