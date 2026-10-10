@@ -185,20 +185,6 @@
 @media(max-width:1020px){.currentcard{padding:17px 13px}.countdown-value{font-size:46px}.countdown-value.long-countdown{font-size:33px}.timeraside strong{font-size:11px}.timerrow{gap:4px}}
 @media(max-width:620px){.currentcard{min-height:0}.countdown-value{font-size:clamp(55px,12vw,70px)}.countdown-value.long-countdown{font-size:clamp(40px,9vw,52px)}}
 
-@media (min-width:621px) and (max-height:840px){
- .workspace{padding-top:16px;padding-bottom:12px}
- .topbar{height:39px;margin-bottom:10px}
- .overview{gap:10px}
- .clockbox{padding:8px 5px 5px}
- .clock{font-size:clamp(62px,7vw,90px);margin-top:4px}
- .clockhint{margin-top:4px}
- .currentcard{padding-top:15px;padding-bottom:13px;min-height:0}
- .currentcard .taskname{margin-top:8px}
- .timerrow{margin-top:11px;margin-bottom:8px}
- .currentcard .upnext{margin-top:10px;padding-top:8px}
- .subjectcard{padding-top:10px;padding-bottom:10px}
- .progress-title{margin:0 2px -3px}
-}
 /* The wallpaper overview is a fixed surface, never a scroll container. */
 .overview{overflow:clip;overscroll-behavior:none}
 .subjectcards{grid-template-columns:1fr;gap:8px;flex-shrink:0}
@@ -213,10 +199,24 @@
 @media (prefers-color-scheme: dark){.subject-phase,.subjectcard .ratio{color:#abc4c5}.subject-percent{color:#a9decb}}
 @media(min-width:621px){
  #desk{min-height:0}
- .overview{gap:10px}
+ /* A web wallpaper cannot read the native Dock frame. Keep a conservative
+    bottom inset; do not move the whole page into the macOS menu bar. */
+ :root{--dock-clearance:96px}
+ .workspace{padding-top:16px;padding-bottom:calc(12px + var(--dock-clearance))}
+ .topbar{height:39px;margin-bottom:10px}
+ .overview{container:overview / size;gap:6px}
+ .clockbox{padding:4px 5px}
+ .clock{font-size:clamp(48px,10cqh,84px);margin-top:4px}
+ .clockhint{margin-top:4px}
  .progress-title{flex-shrink:0}
- .clockbox{padding:8px 5px 4px}
- .currentcard{min-height:0}
+ .progress-title{margin:0 2px -3px}
+ .currentcard{min-height:0;padding:14px 16px}
+ .currentcard .taskname{font-size:22px;margin-top:8px}
+ .timerrow{margin:8px 0 7px}.countdown-value{font-size:55px}
+ .countdown-value.long-countdown{font-size:43px}
+ .currentcard .upnext{margin-top:8px;padding-top:7px}
+ .subjectcard,.subjectcard.math{padding:10px 12px;gap:5px 10px;min-height:68px}
+ .subjectcards{gap:7px}
 }
 .plan-list{padding-left:19px;margin:8px 0;line-height:1.8;font-size:13px}
 .plan-list li{margin:5px 0;overflow-wrap:anywhere}
@@ -224,27 +224,38 @@
 .primary:focus-visible,.secondary:focus-visible,.subjectcard:focus-visible,.item:focus-visible{outline:3px solid #499e8c;outline-offset:3px}
 /* Decorative overflow must not become a focus-scrollable container. */
 @media(min-width:621px){#desk{overflow:clip}}
-@media(min-width:621px) and (max-height:840px){
- .overview{gap:6px}.clockbox{padding:2px 5px}.clock{font-size:54px}
+/* Adapt to the space left AFTER the Dock inset, not the raw screen height. */
+@container overview (max-height:640px){
+ .clockbox{padding:2px 5px}.clock{font-size:54px}
  .currentcard{padding:12px 16px}.currentcard .taskname{font-size:22px}
  .timerrow{margin-top:8px;margin-bottom:7px}.countdown-value{font-size:55px}
  .currentcard .upnext{margin-top:8px;padding-top:7px}
  .subjectcard,.subjectcard.math{padding:8px 12px;gap:4px 10px;min-height:62px}
  .subjectcards{gap:7px}
 }
-@media(min-width:621px) and (max-height:680px){
- .workspace{padding-top:10px;padding-bottom:8px}.topbar{height:34px;margin-bottom:7px}
- .overview{gap:6px}.clock{font-size:48px;margin-top:2px}.clockhint{font-size:11px;margin-top:2px}
- .currentcard{padding:10px 14px}.currentcard .taskname{font-size:19px;margin-top:6px}
+@container overview (max-height:560px){
+ .clockbox{padding:0 5px}
+ .clock{font-size:40px;margin-top:2px}.clockhint{font-size:11px;margin-top:2px}
+ .currentcard{padding:8px 14px}.currentcard .taskname{font-size:19px;margin-top:6px}
  .timerrow{margin:6px 0}.countdown-value{font-size:46px}.countdown-value.long-countdown{font-size:35px}
- .currentcard .upnext{font-size:11px;margin-top:6px;padding-top:6px}
- .subjectcard,.subjectcard.math{padding:8px 12px;gap:4px 8px;min-height:62px}
+ .currentcard .upnext{font-size:11px;margin-top:4px;padding-top:6px}
+ .subjectcard,.subjectcard.math{padding:4px 12px;gap:3px 8px;min-height:54px}
  .subjectcards{gap:6px}.progress-title{font-size:13px}
 }
-@media(min-width:621px) and (max-height:610px){
- .clockhint{display:none}.clock{font-size:40px}.overview{gap:5px}
+@container overview (max-height:480px){
+ .clockhint{display:none}.hello{font-size:11px}.clock{font-size:36px}
  .currentcard .taskname{font-size:17px}.countdown-value{font-size:40px}
- .subjectcard,.subjectcard.math{padding:6px 10px;gap:3px 8px;min-height:56px}
+ .currentcard{padding:8px 12px}
+ .subjectcard,.subjectcard.math{grid-template-columns:minmax(0,1fr) auto auto;padding:6px 10px;gap:3px 8px;min-height:44px}
+ .subject-phase{display:none}.subjectcard .subjectname{font-size:13px}
+}
+@container overview (max-height:440px){
+ .hello{display:none}.clockbox{padding:0 5px}.clock{font-size:28px}
+ .currentcard{padding:4px 12px}.currentcard .taskname{font-size:16px;margin-top:4px}
+ .timerrow{margin:4px 0}.countdown-value{font-size:35px}.countdown-value.long-countdown{font-size:30px}
+ .currentcard .upnext{margin-top:4px;padding-top:4px}
+ .subjectcard,.subjectcard.math{padding:4px 10px;min-height:38px}
+ .subjectcards{gap:4px}
 }
 /* 右侧整张时间表保持宽高，整体上下移动到与左侧科目进度卡片底边齐平。 */
 @media (min-width:621px){
