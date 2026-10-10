@@ -19,6 +19,13 @@ assert.equal(r.state.taskNotes.x1,'kept');assert.equal(r.state.videoTitles[1],'c
 assert.equal(r.state.scheduleArchive[0].schedule[0].id,'x1');
 assert.deepEqual(JSON.parse(db[KEY+'-before-2026-10-10-rounded-hours']),original);
 assert.equal(r.defaultSchedule.reduce((n,t)=>n+r.diff(t),0),1440);
+const coreSlots=r.defaultSchedule.filter(t=>['高数','英语','模拟电子技术','电路'].includes(t.subject)&&r.diff(t)===120);
+assert.equal(coreSlots.length,4);
+assert.deepEqual(Array.from(coreSlots,x=>[x.subject,x.start,x.end]),[['高数','10:00','12:00'],['英语','13:00','15:00'],['模拟电子技术','15:00','17:00'],['电路','21:00','23:00']]);
+const card=r.dailyCard();assert.ok(card.includes('四科均分'));
+assert.equal((card.match(/净学习90分钟＋休息30分钟/g)||[]).length,4);
+assert.ok(!card.includes('今日目标1项'));assert.ok(!card.includes('目标最多2节'));
+assert.ok(card.includes('不加新课，也不只复习高数'));
 for(let minute=0;minute<1440;minute++){
  const now=new Date(2026,9,10,Math.floor(minute/60),minute%60);
  assert.ok(r.currentTimeline(now).cur,`missing minute ${minute}`);
@@ -37,4 +44,4 @@ assert.equal(r.dailyPlan(new Date(2026,9,11)).review,true);
 r.state.checkedMath=r.mathLessons.filter(x=>x.stage===0).map(x=>x.id);
 assert.equal(r.dailyPlan(new Date(2026,9,12)).math[0],'autumn-01');
 assert.ok(!html.includes('专升本'));
-console.log('PASS: syntax, catalogs, migration backup, prior records, one-time migration, storage failure, 1440-minute coverage, daily stability, carryover, Sunday review, summer-to-autumn order');
+console.log('PASS: syntax, catalogs, four equal study blocks, time-based daily plan, migration backup, prior records, one-time migration, storage failure, 1440-minute coverage, daily stability, carryover, Sunday review, summer-to-autumn order');

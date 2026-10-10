@@ -396,21 +396,21 @@ function dailyPlan(now=new Date()){
 function dailyCard(){
  const plan=dailyPlan(),math=plan.math.map(id=>mathLessons.find(x=>x.id===id)).filter(Boolean),mock=plan.mock.filter(id=>videoTitles[id-1]),unit=circuitUnits[plan.circuit],mr=mathLessons.filter(x=>!mathDone(x.id)).length,vr=order.filter(id=>!done(id)).length;
  const list=items=>`<ul class="plan-list">${items.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>`;
- return `<div class="content">${info(dayKey()+' · '+(plan.review?'复习补欠日':'今日具体任务'),'今天学什么','任务按本地打卡进度生成，今天固定不跳号；未完成的课明天继续。不与播放器进度自动同步。')}
+ return `<div class="content">${info(dayKey()+' · '+(plan.review?'复习补欠日':'今日具体任务'),'四科均分 · 今天学什么','高数、英语、模电、电路各留两小时：每科净学习90分钟，另留30分钟休息。下面课名是今天的学习起点，不是必须完成的数量；长课分天，短课完成练习后可按顺序接下一课，不挤占下一科。不与播放器进度自动同步。')}
  ${migrationFailed?'<div class="confirm">旧日程备份未成功，暂未替换作息；以下是新版建议。请先导出备份。</div>':''}
  ${info('09:00—10:00','洗漱、单词、当天计划','洗漱15分钟；单词30分钟，优先复习已学词，再少量新词；余下时间安排任务。')}
- ${info('10:00—12:00 · 高数',plan.review?'高数复习与补欠':'高数 · 今日目标1项',plan.review?'先补未完成的课程，再闭卷回忆本周公式、重做错题；不强制上新课。':'两段45分钟：看课、暂停复述、对应练习；其余30分钟休息。长课没学完就分两天，不为赶数量跳过练习。')}
+ ${info('10:00—12:00 · 高数',plan.review?'高数复习与补欠':'高数 · 接着未完成的课',plan.review?'净学习90分钟＋休息30分钟。先补未完成的课程，再闭卷回忆本周公式、重做错题；不强制上新课。':'净学习90分钟＋休息30分钟：45分钟看课、暂停复述，休息10分钟；再学习与做题45分钟，最后休息20分钟。长课没学完就明天继续，不为赶数量跳过练习。')}
  ${math.length?list(math.map(x=>(mathDone(x.id)?'✓ 已完成 · ':'')+mathStages[x.stage].name+' · '+x.title)):list(['现有高数目录已完成，转入错题复习；留意秋季课程更新。'])}
  <button class="secondary" data-subject="math">查看高数课单与打卡</button>
- ${info('13:00—15:00 · 英语','跟学成刘晓燕当前课程','先接播放器中下一节未完成的课，再完成配套语法或阅读练习并订正。不导入精英英语；尚未取得刘晓燕课表，不能填入未经核实的课名。')}
- ${info('15:00—17:00 · 模电',plan.review?'模电复习与补欠':'模电 · 目标最多2节','每节看课后画电路、解释原理、独立做对应题。90分钟净学习容不下两节时只学一节，最后20分钟准备健身。')}
+ ${info('13:00—15:00 · 英语',plan.review?'英语复习与补欠':'跟学成刘晓燕当前课程',plan.review?'净学习90分钟＋休息30分钟。回忆本周语法、复习单词，重做阅读错题并订正；不强制上新课。':'净学习90分钟＋休息30分钟。先跟播放器中的未完成课程，再完成配套语法或阅读练习并订正。不导入精英英语；尚未取得刘晓燕课表，不能填入未经核实的课名。')}
+ ${info('15:00—17:00 · 模电',plan.review?'模电复习与补欠':'模电 · 接着未完成的课',plan.review?'净学习90分钟＋休息30分钟。补未完成内容，闭卷画本周学过的电路并重做错题；最后20分钟休息并准备健身。':'净学习90分钟＋休息30分钟。看课后画电路、解释原理、独立做对应题。按实际时长推进，不硬性要求两节；最后20分钟休息并准备健身。')}
  ${mock.length?list(mock.map(id=>(done(id)?'✓ 已完成 · ':'')+'第'+id+'节 · '+videoTitle(id))):list(['69节已完成，复习薄弱阶段；另补直流稳压电源。'])}
  <button class="secondary" data-subject="mock">查看模电路线与打卡</button>
  ${info('17:00—19:30 / 19:30—20:30','健身、洗澡 → 晚饭','运动时段包含往返和洗澡；晚饭后休息，20:30—21:00留作机动。')}
- ${info('21:00—23:00 · 电路',unit?unit.name:'电路综合复习',unit?unit.detail:'闭卷整理六模块关系，混合做题并订正。')}
+ ${info('21:00—23:00 · 电路',plan.review?'电路复习与补欠':unit?unit.name:'电路综合复习','净学习90分钟＋休息30分钟。'+(plan.review?'补未完成知识点，闭卷回忆基本定律，重做本周错题并订正。':unit?unit.detail:'闭卷整理六模块关系，混合做题并订正。'))}
  <p class="plan-detail">电路按知识模块安排：今天从未掌握的小节开始，学习一个知识点、独立做对应例题和练习，再订正。模块全部掌握才打卡；6个模块不是6节视频，未取得逐课目录。</p><button class="secondary" data-subject="circuit">查看电路模块</button>
- ${info('23:00—00:00 / 00:00—01:00','闭卷自测 → 放松 → 睡眠','先休息10分钟，再用50分钟回忆当天及前几天所学、重做错题。午夜后不学新课，01:00睡至09:00。')}
- <div class="blocktitle">一轮预计用时 · 试行估算</div><p class="plan-detail">高数还剩${mr}项：若每周6个新课日、每天完成1项，约${Math.ceil(mr/6)}周；从零覆盖56项约10周。模电还剩${vr}节：每天1～2节、每周6天，约${Math.ceil(vr/12)}～${Math.ceil(vr/6)}周。</p>
+ ${info('23:00—00:00 / 00:00—01:00','四科闭卷自测 → 放松 → 睡眠','先休息10分钟，再用50分钟兼顾四科，回忆当天及前几天所学、重做错题。不加新课，也不只复习高数；午夜后放松，01:00睡至09:00。')}
+ <div class="blocktitle">一轮预计用时 · 条件估算，不是每日课时指标</div><p class="plan-detail">高数还剩${mr}项：如果每周实际完成6项，约${Math.ceil(mr/6)}周；从零覆盖现有56项约10周。模电还剩${vr}节：如果每周实际完成6～12节，约${Math.ceil(vr/12)}～${Math.ceil(vr/6)}周。优先守住四科各90分钟净学习和课后练习，按实际完成速度调整，不能为赶日期挤占其他科。</p>
  <div class="notice">每周日保留原学习时段，但用来复习、补欠和自测。上述估算未核对视频时长，包含课后练习的速度需试行后调整；电路缺逐课目录，英语缺课程目录，因此还不能可靠估算所有科目的总完成日期。现有模电清单也不等于完整考纲。</div></div>`;
 }
 function taskCheck(id){return (state.dailyChecks[dayKey()]||[]).includes(id)}
