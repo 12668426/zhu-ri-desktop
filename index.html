@@ -314,6 +314,20 @@
 .schedule-change b{display:block}.schedule-change small{display:block;font-size:11px;color:#53766d}
 .preview-warning{margin-bottom:12px}
 @media(max-width:1250px){.timetable col.col-arrange{width:calc(29% - 32px)}}
+.currentcard-top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:28px;flex-shrink:0}
+.sound-controls{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.sound-toggle,.sound-activate{display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:2px 3px;border:0;border-radius:6px;background:transparent;color:#f1fff8;font-size:11px;white-space:nowrap}
+.sound-toggle:hover,.sound-activate:hover{background:#ffffff19}
+.sound-toggle:focus-visible,.sound-activate:focus-visible{outline:2px solid #effff8;outline-offset:2px}
+.sound-toggle svg{width:14px;height:14px}
+.sound-toggle .switch-track{background:#426e72;border:1px solid #c6e3dd;box-sizing:content-box;width:28px;height:16px}
+.sound-toggle .switch-track:after{width:12px;height:12px}
+.sound-toggle[aria-checked=true] .switch-track{background:#17614f}
+.sound-toggle[aria-checked=true] .switch-track:after{transform:translateX(12px)}
+.sound-activate{text-decoration:underline;text-underline-offset:3px}
+.sound-activate[hidden]{display:none}
+.sound-activate:disabled{opacity:.6;cursor:wait}
+@container overview (max-height:440px){.currentcard-top{min-height:24px}.sound-toggle,.sound-activate{min-height:24px}.currentcard-top .eyebrow{letter-spacing:0}}
 @media(prefers-color-scheme:dark){
  .row-grip{color:#abcacb}.row-grip:hover,.row-grip:focus-visible{background:#315950;color:#d6fff0}
  .schedule-sync{color:#deefee}.schedule-mode-hint{color:#abcacb}.reset-display-order{color:#b2dfd1}
@@ -326,7 +340,7 @@
 <body><main id="desk"><div class="workspace"><header class="topbar"><div class="brand"><span class="brand-icon" aria-hidden="true"><svg class="brand-symbol" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" focusable="false"><circle cx="29.5" cy="16.5" r="8" fill="#F6BF7B"/><path d="M8.5 29.2H39.5" stroke="#ECFFF6" stroke-width="3.3" stroke-linecap="round"/><path d="M9 38.2C15.5 37.2 21 33.6 26.8 33.6H38.5" fill="none" stroke="#A9E1D1" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><h1>逐日</h1><p>STUDY DESK · 2026</p></div></div><div id="topdate" class="topdate">周一至周日 · 每日学习</div></header>
 <div class="grid"><section class="overview" aria-label="学习状态"><div class="clockbox"><div id="hello" class="hello">今天，也在朝目标前进</div><div class="clock"><span id="clock">00:00</span><small id="seconds">00</small></div><div class="clockhint" id="daytext">正在读取时间</div></div>
 <div class="currentcard" id="currentcard" data-urgency="normal">
-  <div class="eyebrow active-line"><span class="signal"></span><span id="status">正在进行</span></div>
+  <div class="currentcard-top"><div class="eyebrow active-line"><span class="signal"></span><span id="status">正在进行</span></div><div class="sound-controls"><button id="sound-toggle" type="button" class="sound-toggle" role="switch" aria-checked="false" aria-label="音效提醒：时段结束时响一声" title="打开后每个时段结束时响一声；需网页保持运行、电脑未静音"><svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 7h3l4-3v10l-4-3H3V7Zm10-1a5 5 0 0 1 0 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>音效提醒</span><span class="switch-track" aria-hidden="true"></span></button><button id="sound-activate" type="button" class="sound-activate" aria-label="试听并启用提示音" hidden>启用</button></div></div>
   <div class="taskname" id="taskname">正在读取计划</div>
   <div class="tasktime" id="tasktime"></div>
   <div class="timerrow" aria-label="当前时段倒计时">
@@ -447,6 +461,7 @@ const state={...stored,checkedVideos:Array.isArray(stored.checkedVideos)?stored.
 // New preferences are additive: upgrading does not change times or course checks.
 state.syncScheduleDrag=stored.syncScheduleDrag!==false;
 state.tableOrder=Array.isArray(stored.tableOrder)?stored.tableOrder.filter(id=>typeof id==='string'):[];
+state.soundReminder=stored.soundReminder===true;
 let rowDrag=null,pendingScheduleMove=null,rowMenuId=null,ignoreRowGripClickUntil=0;
 let migrationFailed=false;
 function migrateSchedule(){
@@ -696,6 +711,21 @@ function renderCard(keepScroll=false){let head='',body='',foot='';let sc=documen
   if(nav.view==='schedule'&&document.getElementById('panelbody')===sc)scrollScheduleToCurrent(sc,keepScroll&&focusChanged);
  });
 }
+// Watch the ending segment, not just the new current task (which changes at zero).
+// Never replay missed alerts after reload, sleep, schedule edits or clock jumps.
+function createEndReminder(){
+ let previous=null,lastTime=null,lastSchedule=null;const fired=new Set();
+ return {reset(){previous=null;lastTime=null;lastSchedule=null},tick(now,current,schedule,enabled){
+  const time=now.getTime(),old=previous,elapsed=lastTime===null?null:time-lastTime;
+  const sameSchedule=lastSchedule===schedule;
+  previous=current;lastTime=time;lastSchedule=schedule;
+  if(!enabled||!old||!sameSchedule||elapsed===null||elapsed<=0||elapsed>15000||!Number.isFinite(old.endsAt)||time<old.endsAt||time-old.endsAt>15000)return null;
+  const key=old.id+'|'+old.endsAt;
+  if(fired.has(key))return null;
+  fired.add(key);if(fired.size>64)fired.delete(fired.values().next().value);
+  return old;
+ }};
+}
 // 真实的逐秒倒计时。跨午夜的睡眠时段按日期处理，避免出现负数、重复倒计时。
 function segmentClock(now=new Date()){
  const {cur,next}=currentTimeline(now);
@@ -705,7 +735,7 @@ function segmentClock(now=new Date()){
   if(tod(cur.end)<=tod(cur.start)&&now<start)start.setDate(start.getDate()-1);
   const duration=diff(cur)*60000;
   const end=new Date(start.getTime()+duration);
-  return {cur,next,seconds:Math.max(0,Math.ceil((end-now)/1000)),progress:Math.max(0,Math.min(100,(now-start)/duration*100)),endLabel:cur.end};
+  return {cur,next,seconds:Math.max(0,Math.ceil((end-now)/1000)),progress:Math.max(0,Math.min(100,(now-start)/duration*100)),endLabel:cur.end,endsAt:end.getTime()};
  }
  if(next){
   const begin=new Date(now.getFullYear(),now.getMonth(),now.getDate(),Math.floor(tod(next.start)/60),tod(next.start)%60);
@@ -719,7 +749,7 @@ function readableCountdown(seconds){
  return hours?`${pad(hours)}:${pad(minutes)}:${pad(last)}`:`${pad(minutes)}:${pad(last)}`;
 }
 function refreshCountdown(now=new Date()){
- const {cur,next,seconds,progress,endLabel}=segmentClock(now),current=cur||next;
+ const {cur,next,seconds,progress,endLabel,endsAt}=segmentClock(now),current=cur||next;
  const card=document.getElementById('currentcard');
  document.getElementById('status').textContent=cur?'正在进行':next?'即将开始':'今日已完成';
  document.getElementById('taskname').textContent=current?current.title:'暂无安排';
@@ -738,7 +768,65 @@ function refreshCountdown(now=new Date()){
  document.getElementById('timerline').style.width=progress+'%';
  card.dataset.urgency=cur&&seconds<=600?'urgent':cur&&seconds<=1800?'soon':'normal';
  document.getElementById('nexttask').textContent=next?`${next.start} · ${next.title}`:'今天的计划已结束';
+ renderSoundControls();
+ const ended=reminderClock.tick(now,cur?{id:cur.id,title:cur.title,endsAt}:null,JSON.stringify(state.schedule),state.soundReminder);
+ if(ended){const played=playReminderChime();toast(`时段结束：${ended.title}${played?'':'（音效待启用）'}`)}
 }
+const reminderClock=createEndReminder();
+let reminderAudio=null,audioAction=0,audioStarting=false;
+const reminderVoices=new Set();
+function renderSoundControls(){
+ const toggle=document.getElementById('sound-toggle'),activate=document.getElementById('sound-activate');
+ toggle.setAttribute('aria-checked',String(state.soundReminder));
+ activate.hidden=!state.soundReminder;activate.disabled=audioStarting;
+ activate.textContent=audioStarting?'启用中':reminderAudio?.state==='running'?'试听':'启用';
+ activate.title=reminderAudio?.state==='running'?'试听时段结束提示音':'刷新或声音被暂停后，点击一次启用声音';
+}
+function stopReminderChime(){
+ for(const voice of reminderVoices){try{voice.osc.stop()}catch(e){}voice.osc.disconnect();voice.gain.disconnect()}
+ reminderVoices.clear();
+}
+function playReminderChime(){
+ if(!state.soundReminder||reminderAudio?.state!=='running')return false;
+ const ctx=reminderAudio,start=ctx.currentTime;
+ try{
+  stopReminderChime();
+  [660,880].forEach((frequency,i)=>{
+   const osc=ctx.createOscillator(),gain=ctx.createGain(),at=start+i*.22;
+   const voice={osc,gain};reminderVoices.add(voice);
+   osc.type='sine';osc.frequency.setValueAtTime(frequency,at);
+   gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(.12,at+.025);gain.gain.exponentialRampToValueAtTime(.001,at+.48);
+   osc.connect(gain);gain.connect(ctx.destination);
+   osc.addEventListener('ended',()=>{osc.disconnect();gain.disconnect();reminderVoices.delete(voice)},{once:true});
+   osc.start(at);osc.stop(at+.5);
+  });return true;
+ }catch(e){stopReminderChime();return false}
+}
+async function activateReminderAudio(){
+ const action=++audioAction;let timeout;
+ audioStarting=true;renderSoundControls();
+ try{
+  const AudioCtor=window.AudioContext||window.webkitAudioContext;
+  if(!AudioCtor)throw Error('unsupported');
+  // Construct/resume inside this click's user activation, never at page load.
+  if(!reminderAudio||reminderAudio.state==='closed'){
+   reminderAudio=new AudioCtor();reminderAudio.addEventListener('statechange',renderSoundControls);
+  }
+  const ctx=reminderAudio;
+  if(ctx.state!=='running')await Promise.race([ctx.resume(),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('blocked')),2000)})]);
+  if(action!==audioAction||!state.soundReminder)return;
+  if(ctx.state!=='running'||!playReminderChime())throw Error('blocked');
+  toast('音效提醒已启用：每个时段结束时响一声');
+ }catch(e){if(action===audioAction&&state.soundReminder)toast('暂未启用声音，请在 Plash 浏览模式点击“启用”，并检查是否静音。')}
+ finally{clearTimeout(timeout);if(action===audioAction){audioStarting=false;renderSoundControls()}}
+}
+document.getElementById('sound-toggle').addEventListener('click',()=>{
+ const enabled=!state.soundReminder;
+ if(!saveSchedulePreference({soundReminder:enabled}))return;
+ reminderClock.reset();audioAction++;audioStarting=false;
+ if(enabled)activateReminderAudio();else{stopReminderChime();renderSoundControls();toast('音效提醒已关闭')}
+});
+document.getElementById('sound-activate').addEventListener('click',()=>{if(state.soundReminder)activateReminderAudio()});
 function refreshAll(keepScroll=false){
  const n=new Date();
  document.getElementById('clock').textContent=pad(n.getHours())+':'+pad(n.getMinutes());
@@ -757,7 +845,7 @@ function refreshAll(keepScroll=false){
 }
 
 function exportBackup(){let b=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),...state},null,2)],{type:'application/json'});let url=URL.createObjectURL(b);let a=document.createElement('a');a.href=url;a.download='逐日学习进度备份_'+dayKey()+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('学习计划已导出')}
-document.getElementById('importFile').addEventListener('change',async e=>{let file=e.target.files?.[0];if(!file)return;try{let obj=JSON.parse(await file.text());if(!obj||!Array.isArray(obj.schedule)||!Array.isArray(obj.checkedVideos))throw Error('无效备份');const next={...state,scheduleRevision:SCHEDULE_REVISION,dailyPlans:obj.dailyPlans||{}};for(let key of ['checkedVideos','checkedMath','checkedCircuit','dailyChecks','videoTitles','schedule','taskNotes','blankPercent','bottomInset','scheduleArchive'])if(obj[key]!==undefined)next[key]=clone(obj[key]);if(typeof obj.syncScheduleDrag==='boolean')next.syncScheduleDrag=obj.syncScheduleDrag;if(Array.isArray(obj.tableOrder))next.tableOrder=obj.tableOrder.filter(id=>typeof id==='string');localStorage.setItem(KEY+'-before-import-'+Date.now(),JSON.stringify(state));localStorage.setItem(KEY,JSON.stringify(next));Object.assign(state,next);home();refreshAll();applyBlankWidth(state.blankPercent);applyBottomInset(state.bottomInset);toast('备份导入完成，导入前记录已另存')}catch(err){toast('导入失败：备份无效或存储不足，原记录未替换')}e.target.value=''});
+document.getElementById('importFile').addEventListener('change',async e=>{let file=e.target.files?.[0];if(!file)return;try{let obj=JSON.parse(await file.text());if(!obj||!Array.isArray(obj.schedule)||!Array.isArray(obj.checkedVideos))throw Error('无效备份');const next={...state,scheduleRevision:SCHEDULE_REVISION,dailyPlans:obj.dailyPlans||{}};for(let key of ['checkedVideos','checkedMath','checkedCircuit','dailyChecks','videoTitles','schedule','taskNotes','blankPercent','bottomInset','scheduleArchive'])if(obj[key]!==undefined)next[key]=clone(obj[key]);if(typeof obj.syncScheduleDrag==='boolean')next.syncScheduleDrag=obj.syncScheduleDrag;if(typeof obj.soundReminder==='boolean')next.soundReminder=obj.soundReminder;if(Array.isArray(obj.tableOrder))next.tableOrder=obj.tableOrder.filter(id=>typeof id==='string');localStorage.setItem(KEY+'-before-import-'+Date.now(),JSON.stringify(state));localStorage.setItem(KEY,JSON.stringify(next));Object.assign(state,next);reminderClock.reset();audioAction++;audioStarting=false;stopReminderChime();home();refreshAll();applyBlankWidth(state.blankPercent);applyBottomInset(state.bottomInset);toast('备份导入完成，导入前记录已另存')}catch(err){toast('导入失败：备份无效或存储不足，原记录未替换')}e.target.value=''});
 document.getElementById('desk').addEventListener('click',e=>{let b=e.target.closest('button, tr[data-task]');if(!b)return;
  if(e.target.closest('.row-grip'))return;
  if(b.dataset.action==='schedule-sync'){if(saveSchedulePreference({syncScheduleDrag:!state.syncScheduleDrag})){renderCard(true);document.querySelector('.schedule-sync')?.focus({preventScroll:true})}return}

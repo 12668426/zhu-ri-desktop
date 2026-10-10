@@ -3,10 +3,11 @@ const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),
 const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
 new Function(script);
 const prefix=script.split('// 真实的逐秒倒计时。')[0];
+const clockHelpers=script.slice(script.indexOf('function segmentClock('),script.indexOf('function refreshCountdown('));
 const KEY='zhuri-anhui-study-v1';
 function boot(db={},fail=false){
  const ctx=vm.createContext({localStorage:{getItem:k=>db[k]??null,setItem:(k,v)=>{if(fail===true||(typeof fail==='function'&&fail(k)))throw Error('full');db[k]=v}},document:{getElementById:()=>({classList:{add(){},remove(){}}})},setTimeout:()=>0,clearTimeout(){}});
- vm.runInContext(prefix+';globalThis.inspect={state,defaultSchedule,mathLessons,mathStages,diff,tod,currentTimeline,todayTasks,dailyPlan,dailyCard,orderedScheduleRows,movedScheduleRows,scheduleMoveProposal,saveScheduleProposal,saveSchedulePreference,scheduleCard};',ctx);
+ vm.runInContext(prefix+clockHelpers+';globalThis.inspect={state,defaultSchedule,mathLessons,mathStages,diff,tod,currentTimeline,todayTasks,dailyPlan,dailyCard,orderedScheduleRows,movedScheduleRows,scheduleMoveProposal,saveScheduleProposal,saveSchedulePreference,scheduleCard,createEndReminder,segmentClock};',ctx);
  return ctx.inspect;
 }
 const original={schedule:[{id:'x1',start:'07:00',end:'08:00',days:[0,1,2,3,4,5,6]}],checkedVideos:[1,2],checkedCircuit:[0],dailyChecks:{'2026-10-09':['x1']},taskNotes:{x1:'kept'},videoTitles:{1:'custom title'},blankPercent:24};
@@ -173,3 +174,56 @@ assert.ok(overlap.scheduleMoveProposal(overlap.todayTasks()).error);
 const weekday=new Date().getDay(),mixed=custom([{id:'a',start:'10:00',end:'11:00',days},{id:'b',start:'11:00',end:'12:00',days:[weekday]}]);
 assert.ok(mixed.scheduleMoveProposal(mixed.todayTasks()).error);
 console.log('PASS: both reorder modes, unchanged countdown in display-only mode, preview isolation, fixed durations, complete-day coverage, gym warning, automatic backup, record preservation, reload persistence, stale preview and failed storage protection, gaps, midnight and invalid schedules');
+const soundBoot=boot({[KEY]:JSON.stringify(fixture)});
+assert.equal(soundBoot.state.soundReminder,false);
+const midnight=new Date(2026,9,11,0,0).getTime();
+const end=soundBoot.segmentClock(new Date(midnight-1000));assert.equal(end.endsAt,midnight);
+const segment={id:end.cur.id,title:end.cur.title,endsAt:end.endsAt},nextSegment={id:'next',endsAt:midnight+3600000};
+const reminder=soundBoot.createEndReminder();
+assert.equal(reminder.tick(new Date(midnight-1000),segment,'original',true),null);
+assert.equal(reminder.tick(new Date(midnight),nextSegment,'original',true).id,segment.id);
+assert.equal(reminder.tick(new Date(midnight+1000),nextSegment,'original',true),null);
+reminder.reset(); // resetting/reloading never rings immediately
+assert.equal(reminder.tick(new Date(midnight+1000),nextSegment,'original',true),null);
+for(const [enabled,schedule,elapsed] of [[false,'original',1000],[true,'edited',1000],[true,'original',60000],[true,'original',-1000]]){
+ const check=soundBoot.createEndReminder();check.tick(new Date(midnight-500),segment,'original',true);
+ assert.equal(check.tick(new Date(midnight-500+elapsed),nextSegment,schedule,enabled),null);
+}
+const gapReminder=soundBoot.createEndReminder();gapReminder.tick(new Date(midnight-1000),segment,'original',true);
+assert.equal(gapReminder.tick(new Date(midnight+2000),null,'original',true).id,segment.id);
+const repeated=soundBoot.createEndReminder();repeated.tick(new Date(midnight-1000),segment,'original',true);repeated.tick(new Date(midnight),segment,'original',true);
+assert.equal(repeated.tick(new Date(midnight+1000),segment,'original',true),null);
+console.log('PASS: sound defaults off, exact midnight boundary, one alert at segment transition or gap, no repeat, no reload/sleep/clock-edit/schedule-edit catch-up');
+async function testReminderAudio(){
+ const audioDb={[KEY]:JSON.stringify({...fixture,soundReminder:true})},audioNodes={},oscillators=[];let created=0;
+ const audioNode=id=>audioNodes[id]??={attrs:{},style:{},listeners:{},classList:{add(){},remove(){}},setAttribute(k,v){this.attrs[k]=v},addEventListener(k,f){this.listeners[k]=f}};
+ const param=()=>({calls:[],setValueAtTime(v,t){this.calls.push([v,t])},linearRampToValueAtTime(v,t){this.calls.push([v,t])},exponentialRampToValueAtTime(v,t){this.calls.push([v,t])}});
+ class MockAudio{
+  constructor(){created++;this.state='running';this.currentTime=10;this.destination={}}
+  addEventListener(){}resume(){this.state='running';return Promise.resolve()}
+  createOscillator(){const o={frequency:param(),type:'',starts:[],stops:[],connect(){},disconnect(){},addEventListener(){},start(t){this.starts.push(t)},stop(t){this.stops.push(t)}};oscillators.push(o);return o}
+  createGain(){return {gain:param(),connect(){},disconnect(){}}}
+ }
+ const ctx=vm.createContext({window:{AudioContext:MockAudio},localStorage:{getItem:k=>audioDb[k]??null,setItem:(k,v)=>{audioDb[k]=v}},document:{getElementById:audioNode},setTimeout,clearTimeout});
+ const audioSource=script.slice(script.indexOf('const reminderClock=createEndReminder();'),script.indexOf('function refreshAll('));
+ vm.runInContext(prefix+audioSource+';globalThis.audioTest={state,playReminderChime,activateReminderAudio,renderSoundControls,get voices(){return reminderVoices.size},get ctx(){return reminderAudio}};',ctx);
+ const a=ctx.audioTest,originalAudioState=plain(a.state);
+ a.renderSoundControls();assert.equal(created,0);assert.equal(audioNode('sound-activate').textContent,'启用');
+ assert.equal(a.playReminderChime(),false);await a.activateReminderAudio();
+ assert.equal(created,1);assert.equal(a.voices,2);assert.equal(audioNode('sound-activate').textContent,'试听');
+ assert.deepEqual(oscillators.map(o=>o.frequency.calls[0][0]),[660,880]);
+ assert.equal(a.playReminderChime(),true);assert.equal(a.voices,2); // stops preceding short chime
+ audioNode('sound-toggle').listeners.click();assert.equal(a.state.soundReminder,false);assert.equal(a.voices,0);
+ assert.equal(audioNode('sound-toggle').attrs['aria-checked'],'false');assert.equal(audioNode('sound-activate').hidden,true);
+ assert.equal(a.playReminderChime(),false);assert.equal(JSON.parse(audioDb[KEY]).soundReminder,false);
+ const unchanged={...plain(a.state),soundReminder:true};assert.deepEqual(unchanged,originalAudioState);
+ audioNode('sound-toggle').listeners.click();assert.equal(a.state.soundReminder,true);assert.equal(created,1);
+ a.ctx.state='interrupted';a.renderSoundControls();assert.equal(audioNode('sound-activate').textContent,'启用');assert.equal(a.playReminderChime(),false);
+ await a.activateReminderAudio();assert.equal(a.ctx.state,'running');assert.equal(a.voices,2);
+ audioNode('sound-toggle').listeners.click();
+ ctx.window.AudioContext=undefined;vm.runInContext('reminderAudio=null;state.soundReminder=true;',ctx);
+ await a.activateReminderAudio();assert.equal(audioNode('sound-activate').disabled,false);assert.equal(audioNode('sound-activate').textContent,'启用');
+ assert.ok(audioNode('toast').textContent.includes('暂未启用声音'));
+ console.log('PASS: no autoplay on load, gesture-activated two-note chime, sound switch and persistent setting, immediate mute, stopped overlapping voices, interrupted-context recovery, unsupported-browser feedback and untouched learning records');
+}
+testReminderAudio().catch(error=>{console.error(error);process.exitCode=1});
