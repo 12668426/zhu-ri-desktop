@@ -203,6 +203,7 @@
     bottom inset; do not move the whole page into the macOS menu bar. */
  :root{--dock-clearance:96px}
  .workspace{padding-top:16px;padding-bottom:calc(12px + var(--dock-clearance))}
+ .grid{grid-template-rows:minmax(0,1fr)}
  .topbar{height:39px;margin-bottom:10px}
  .overview{container:overview / size;gap:6px}
  .clockbox{padding:4px 5px}
@@ -210,9 +211,10 @@
  .clockhint{margin-top:4px}
  .progress-title{flex-shrink:0}
  .progress-title{margin:0 2px -3px}
- .currentcard{min-height:0;padding:14px 16px}
+ /* Fill the height chosen by the bottom handle, instead of stopping at content height. */
+ .currentcard{min-height:0;padding:14px 16px;flex:1;display:flex;flex-direction:column}
  .currentcard .taskname{font-size:22px;margin-top:8px}
- .timerrow{margin:8px 0 7px}.countdown-value{font-size:55px}
+ .timerrow{margin:8px 0 7px;flex:1 0 auto;align-items:center}.countdown-value{font-size:55px}
  .countdown-value.long-countdown{font-size:43px}
  .currentcard .upnext{margin-top:8px;padding-top:7px}
  .subjectcard,.subjectcard.math{padding:10px 12px;gap:5px 10px;min-height:68px}
@@ -802,7 +804,7 @@ document.addEventListener('pointerdown',e=>{if(!e.target.closest('#bottom-adjust
 document.getElementById('bottom-adjuster').addEventListener('keydown',e=>{if(e.key==='Escape'){bottomOptions.hidden=true;bottomGrip.focus()}});
 window.addEventListener('resize',()=>applyBottomInset(state.bottomInset));
 applyBottomInset(state.bottomInset);
-// 时间表沿用现有宽度和高度，仅调整整体位置，使底边与左侧“科目进度”卡片底边对齐。
+// 时间表底边随底部胶囊伸缩，并与填满可用高度的左侧科目进度底边对齐。
 // 由真实卡片位置计算位移，避免固定像素在不同 MacBook 屏幕上产生偏差。
 const schedulePanel=document.querySelector('.grid > .panel');
 const subjectCards=document.querySelector('.overview .subjectcards');
@@ -815,7 +817,7 @@ function alignSchedulePanel(){
  }
  const gridRect=scheduleGrid.getBoundingClientRect();
  const targetBottom=subjectCards.getBoundingClientRect().bottom;
- // 保留当前时间表的既定高度（比科目进度区底部多 12px），不修改宽高规则。
+ // 左栏现在填满胶囊决定的可用高度，展开和收起都不能停在原来的内容高度。
  const height=Math.max(0,Math.min(gridRect.height,targetBottom+12-gridRect.top));
  schedulePanel.style.setProperty('--schedule-panel-height',Math.round(height)+'px');
  // 先清空旧位移，再以实际绘制出的底边计算偏移，避免旧 transform 和 offsetHeight 造成偏差。
