@@ -245,4 +245,41 @@ async function testReminderAudio(){
  console.log('PASS: no autoplay on load, gesture-activated two-note chime, sound switch and persistent setting, immediate mute, stopped overlapping voices, interrupted-context recovery, unsupported-browser feedback and untouched learning records');
  console.log('PASS: icon-only preview without enabling reminders, 0–100 volume, silent zero, safe peak gain, louder default, volume reload persistence and storage failure protection');
 }
+function testVolumePopover(){
+ const timers=new Map(),docListeners={},windowListeners={};let nextTimer=0;
+ const document={activeElement:null,addEventListener(k,f){docListeners[k]=f},getElementById:id=>nodes[id]};
+ const makeNode=()=>({hidden:false,attrs:{},listeners:{},offsetWidth:154,offsetHeight:46,style:{setProperty(k,v){this[k]=v}},
+  setAttribute(k,v){this.attrs[k]=v},addEventListener(k,f){this.listeners[k]=f},contains(node){return node===this},
+  getBoundingClientRect(){return {left:300,top:170,width:40}},focus(){document.activeElement=this;this.listeners.focusin?.()}});
+ const nodes={'sound-volume-value':makeNode(),'sound-volume-popover':makeNode(),'sound-volume':makeNode()};
+ const trigger=nodes['sound-volume-value'],popover=nodes['sound-volume-popover'],range=nodes['sound-volume'];
+ popover.hidden=true;popover.contains=node=>node===popover||node===range;
+ const ctx=vm.createContext({document,window:{innerWidth:960,addEventListener(k,f){windowListeners[k]=f}},
+  setTimeout:f=>{timers.set(++nextTimer,f);return nextTimer},clearTimeout:id=>timers.delete(id)});
+ vm.runInContext(script.slice(script.indexOf('// Volume lives above its percentage')),ctx);
+ const flush=()=>{for(const [id,f] of [...timers]){timers.delete(id);f()}};
+ assert.ok(popover.hidden);
+ trigger.listeners.pointerenter({pointerType:'mouse'});
+ assert.equal(popover.hidden,false);assert.equal(trigger.attrs['aria-expanded'],'true');
+ assert.equal(popover.style.left,'243px');assert.equal(popover.style.top,'118px');
+ trigger.listeners.pointerleave();popover.listeners.pointerenter({pointerType:'mouse'});flush();
+ assert.equal(popover.hidden,false); // crossing the gap must not close the slider
+ popover.listeners.pointerleave();flush();assert.equal(popover.hidden,true);
+ trigger.listeners.pointerenter({pointerType:'touch'});assert.equal(popover.hidden,true);
+ trigger.listeners.click();trigger.listeners.pointerleave();flush();assert.equal(popover.hidden,false);
+ trigger.listeners.click();assert.equal(popover.hidden,true);
+ trigger.listeners.click();docListeners.pointerdown({target:{}});assert.equal(popover.hidden,true);
+ trigger.listeners.keydown({key:'ArrowUp',preventDefault(){}});assert.equal(document.activeElement,range);
+ docListeners.keydown({key:'Escape',preventDefault(){}});assert.equal(popover.hidden,true);
+ assert.equal(document.activeElement,trigger);assert.equal(trigger.attrs['aria-expanded'],'false');
+ trigger.listeners.click();assert.equal(popover.hidden,false); // Escape does not prevent reopening
+ trigger.getBoundingClientRect=()=>({left:0,top:10,width:40});windowListeners.resize();
+ assert.equal(popover.style.left,'8px');assert.equal(popover.style.top,'8px');
+ docListeners.pointerdown({target:{}});document.activeElement=null;
+ trigger.listeners.focusin();assert.equal(popover.hidden,false);
+ trigger.listeners.focusout();flush();assert.equal(popover.hidden,true);
+ assert.ok(html.includes('#sound-volume-popover[hidden]'));assert.ok(!soundMarkup.includes('type="range"'));
+ console.log('PASS: volume hidden by default, hover above percentage, pointer bridge, click pin/toggle, touch alternative, outside dismissal, keyboard slider focus, Escape without reopening, focus dismissal and viewport clamping');
+}
+testVolumePopover();
 testReminderAudio().catch(error=>{console.error(error);process.exitCode=1});
