@@ -217,6 +217,10 @@
  .subjectcard{padding:9px 12px;gap:5px}.subjectcard .glyph{font-size:20px}
  .subjectcard.math{padding:10px 12px}
 }
+/* 右侧整张时间表保持宽高，整体上下移动到与左侧科目进度卡片底边齐平。 */
+@media (min-width:621px){
+ .grid > .panel{align-self:start;height:var(--schedule-panel-height,100%);transform:translateY(var(--schedule-panel-shift,-12px))}
+}
 </style></head>
 <body><main id="desk"><div class="workspace"><header class="topbar"><div class="brand"><span class="brand-icon" aria-hidden="true"><svg class="brand-symbol" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" focusable="false"><circle cx="29.5" cy="16.5" r="8" fill="#F6BF7B"/><path d="M8.5 29.2H39.5" stroke="#ECFFF6" stroke-width="3.3" stroke-linecap="round"/><path d="M9 38.2C15.5 37.2 21 33.6 26.8 33.6H38.5" fill="none" stroke="#A9E1D1" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><h1>逐日</h1><p>STUDY DESK · 2026</p></div></div><div id="topdate" class="topdate">周一至周日 · 每日学习</div></header>
 <div class="grid"><section class="overview" aria-label="学习状态"><div class="clockbox"><div id="hello" class="hello">今天，也在朝目标前进</div><div class="clock"><span id="clock">00:00</span><small id="seconds">00</small></div><div class="clockhint" id="daytext">正在读取时间</div></div>
@@ -455,6 +459,43 @@ function plannerCard(){let tasks=state.schedule.slice().sort((a,b)=>tod(a.start)
 function editCard(){let t=taskById(nav.editing)||{title:'',start:'10:00',end:'10:15',subject:'高数',type:'study',desc:'',days:[0,1,2,3,4,5,6]};let options=SUBJECTS.map(x=>`<option value="${safe(x)}" ${t.subject===x?'selected':''}>${safe(x)}</option>`).join('');return `<div class="content"><div class="info"><span>仅修改本张时间表</span><h3>${nav.editing?'编辑时间段':'新增时间段'}</h3><p>每天固定作息。如需调整休息长度，直接改开始和结束时间即可。</p></div><form id="editform"><label class="field">安排名称<input name="title" value="${safe(t.title)}" required maxlength="65" placeholder="例如：学习模电"></label><div class="fields2"><label class="field">开始时间<input name="start" type="time" value="${safe(t.start)}" required></label><label class="field">结束时间<input name="end" type="time" value="${safe(t.end)}" required></label></div><label class="field">科目<select name="subject">${options}</select></label><label class="field">类型<select name="type"><option value="study" ${t.type==='study'?'selected':''}>学习</option><option value="break" ${t.type==='break'?'selected':''}>休息</option><option value="life" ${t.type==='life'?'selected':''}>日常生活</option></select></label><label class="field">备注<textarea name="desc" maxlength="240">${safe(t.desc)}</textarea></label><div class="button-row"><button class="primary" type="submit">保存时段</button>${nav.editing?'<button type="button" class="secondary danger" data-action="delete">删除这个时段</button>':''}</div></form><div id="editerror" class="validation" role="alert"></div></div>`}
 function confirmCard(){return `<div class="content"><div class="confirm">${nav.confirm==='restore'?'确定恢复默认时间表吗？这会覆盖你改过的时间安排，但不会清除视频打卡。':'确定删除这个时间段吗？删除后可以继续新增。'}</div><div class="button-row"><button class="primary" data-action="confirm">确认${nav.confirm==='restore'?'恢复':'删除'}</button><button class="secondary" data-action="back">取消</button></div></div>`}
 function genericCard(name){let tasks=todayTasks().filter(t=>t.subject===name);return `<div class="content">${info('每日安排',name,`今天共有 ${tasks.length} 个相关时段，按实际进度学习即可。`)}${tasks.map(t=>`<button class="item" data-task="${safe(t.id)}"><span class="number" style="width:56px;font-size:11px">${t.start}</span><span class="details"><b>${safe(t.title)}</b><small>${safe(t.desc||'')}</small></span><span class="arrow">›</span></button>`).join('')}</div>`}
+// 自动把当前时段带入右侧时间表视野；只滚动卡片内部，不影响桌面整体位置。
+let lastScheduleFocusId=null;
+function scrollScheduleToCurrent(sc,animated=false){
+ if(nav.view!=='schedule')return;
+ const {cur,next}=currentTimeline();
+ const taskId=cur?.id||next?.id;
+ if(!taskId)return;
+ const row=Array.from(sc.querySelectorAll('.timetable tbody tr[data-task]')).find(el=>el.dataset.task===taskId);
+ if(!row)return;
+ const view=sc.getBoundingClientRect(),item=row.getBoundingClientRect();
+ const idealTop=sc.scrollTop+item.top-view.top-(sc.clientHeight-item.height)/2;
+ const maxTop=Math.max(0,sc.scrollHeight-sc.clientHeight);
+ sc.scrollTo({top:Math.max(0,Math.min(maxTop,idealTop)),behavior:animated?'smooth':'auto'});
+}
+// Keep the highlighted time block visible inside the timetable card in Plash.
+let lastScheduleScrollKey='';
+function scrollScheduleToCurrent(sc,force=false){
+ const rows=Array.from(sc.querySelectorAll('tbody tr[data-task]'));
+ if(!rows.length){lastScheduleScrollKey='';return;}
+ const now=new Date(),{cur,next}=currentTimeline(now);
+ const match=id=>rows.find(row=>row.dataset.task===id);
+ const currentMinute=now.getHours()*60+now.getMinutes();
+ const upcomingToday=todayTasks(now.getDay()).find(t=>tod(t.start)>currentMinute);
+ const target=match(cur?.id)||match(upcomingToday?.id)||rows[rows.length-1];
+ const phase=cur?.id===target.dataset.task?'now':upcomingToday?.id===target.dataset.task?'next':'last';
+ const key=dayKey(now)+'|'+target.dataset.task+'|'+phase;
+ if(!force&&key===lastScheduleScrollKey)return; // Keep manual scrolling undisturbed between changes.
+ const initial=lastScheduleScrollKey==='';
+ lastScheduleScrollKey=key;
+ const sticky=sc.querySelector('thead')?.getBoundingClientRect().height||0;
+ const rowRect=target.getBoundingClientRect(),scRect=sc.getBoundingClientRect();
+ const visible=Math.max(0,sc.clientHeight-sticky);
+ const desired=sc.scrollTop+rowRect.top-scRect.top-sticky-Math.max(8,(visible-rowRect.height)*0.35);
+ const top=Math.max(0,Math.min(Math.max(0,sc.scrollHeight-sc.clientHeight),desired));
+ const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ sc.scrollTo({top,behavior:(initial||force||reduced)?'auto':'smooth'});
+}
 function renderCard(keepScroll=false){let head='',body='',foot='';let sc=document.getElementById('panelbody');let prev=keepScroll?sc.scrollTop:0;let v=nav.view;
  if(v==='schedule'){({head,body,foot}=scheduleCard())}
  else if(v==='subject'){let isM=nav.subject==='mock',isMath=nav.subject==='math';head=header(isMath?'高数':isM?'模拟电子技术':'电路','LEARNING PATH',isMath?`${mathLessons.filter(x=>mathDone(x.id)).length}/56`:isM?`${state.checkedVideos.length}/69`:`${state.checkedCircuit.length}/6`);body=isMath?mathCard():isM?mockCard():circuitCard();foot=isMath?'暑期基础 → 秋季强化 · 本地手动打卡':isM?'69节视频 · 按老师圈选清单排序并分阶段学习':'学校考纲 · 6个知识模块'}
@@ -468,6 +509,15 @@ function renderCard(keepScroll=false){let head='',body='',foot='';let sc=documen
  else if(v==='confirm'){head=header('请确认','ONE MORE STEP');body=confirmCard();foot='不会删除已完成的视频记录'}
  else if(v==='generic'){head=header(nav.subject,'STUDY SUBJECT');body=genericCard(nav.subject);foot='请按实际进度安排学习'}
  document.querySelector('.panel').classList.toggle('schedule-view',v==='schedule');document.getElementById('panelhead').innerHTML=head;sc.innerHTML=body;document.getElementById('panelfoot').innerHTML=foot;sc.scrollTop=keepScroll?prev:0;
+ if(v==='schedule')scrollScheduleToCurrent(sc,!keepScroll);else lastScheduleScrollKey='';
+ // 首次打开/返回时间表自动定位；时段切换时自动跟进，普通每分钟刷新保留手动滚动位置。
+ const focusId=v==='schedule'?(currentTimeline().cur?.id||currentTimeline().next?.id||null):null;
+ const focusChanged=focusId!==lastScheduleFocusId;
+ const shouldFocus=v==='schedule'&&focusId&&(!keepScroll||focusChanged);
+ lastScheduleFocusId=focusId;
+ if(shouldFocus)requestAnimationFrame(()=>{
+  if(nav.view==='schedule'&&document.getElementById('panelbody')===sc)scrollScheduleToCurrent(sc,keepScroll&&focusChanged);
+ });
 }
 // 真实的逐秒倒计时。跨午夜的睡眠时段按日期处理，避免出现负数、重复倒计时。
 function segmentClock(now=new Date()){
@@ -553,6 +603,10 @@ document.getElementById('desk').addEventListener('submit',e=>{if(e.target.id!=='
 // Vertical wheel/touch scrolling in the card is intentional; no horizontal swiping, slide carousels, or page navigation.
 let lastMinute='';setInterval(()=>{const now=new Date(),k=dayKey(now)+' '+pad(now.getHours())+':'+pad(now.getMinutes());if(k!==lastMinute){lastMinute=k;refreshAll(true)}else{document.getElementById('seconds').textContent=pad(now.getSeconds());refreshCountdown(now)}},1000);
 refreshAll();
+// Plash/Safari 页面首次显示后再次校准：确保布局尺寸确定时当前时段已进入可视范围。
+window.addEventListener('load',()=>{
+ if(nav.view==='schedule')requestAnimationFrame(()=>scrollScheduleToCurrent(document.getElementById('panelbody')));
+});
 
 // The divider only changes reserved Finder desktop space; card navigation/scrolling are untouched.
 const grip=document.getElementById('space-resizer');
@@ -612,4 +666,35 @@ grip.addEventListener('keydown',e=>{
 grip.addEventListener('dblclick',()=>{applyBlankWidth(DEFAULT_BLANK_PERCENT,true);toast('留白宽度已恢复默认')});
 window.addEventListener('resize',()=>applyBlankWidth(state.blankPercent));
 applyBlankWidth(state.blankPercent);
+// 时间表沿用现有宽度和高度，仅调整整体位置，使底边与左侧“科目进度”卡片底边对齐。
+// 由真实卡片位置计算位移，避免固定像素在不同 MacBook 屏幕上产生偏差。
+const schedulePanel=document.querySelector('.grid > .panel');
+const subjectCards=document.querySelector('.overview .subjectcards');
+const scheduleGrid=document.querySelector('.grid');
+function alignSchedulePanel(){
+ if(window.innerWidth<=620){
+  schedulePanel.style.removeProperty('--schedule-panel-height');
+  schedulePanel.style.removeProperty('--schedule-panel-shift');
+  return;
+ }
+ const gridRect=scheduleGrid.getBoundingClientRect();
+ const targetBottom=subjectCards.getBoundingClientRect().bottom;
+ // 保留当前时间表的既定高度（比科目进度区底部多 12px），不修改宽高规则。
+ const height=Math.max(0,Math.min(gridRect.height,targetBottom+12-gridRect.top));
+ schedulePanel.style.setProperty('--schedule-panel-height',Math.round(height)+'px');
+ // 先清空旧位移，再以实际绘制出的底边计算偏移，避免旧 transform 和 offsetHeight 造成偏差。
+ schedulePanel.style.setProperty('--schedule-panel-shift','0px');
+ const renderedBottom=schedulePanel.getBoundingClientRect().bottom;
+ const shift=Math.round(targetBottom-renderedBottom);
+ schedulePanel.style.setProperty('--schedule-panel-shift',shift+'px');
+}
+if('ResizeObserver' in window){
+ const layoutObserver=new ResizeObserver(alignSchedulePanel);
+ layoutObserver.observe(scheduleGrid);
+ layoutObserver.observe(subjectCards);
+}
+window.addEventListener('resize',alignSchedulePanel);
+window.addEventListener('load',alignSchedulePanel);
+alignSchedulePanel();
+requestAnimationFrame(alignSchedulePanel);
 </script></body></html>
