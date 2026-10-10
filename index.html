@@ -261,6 +261,29 @@
 @media (min-width:621px){
  .grid > .panel{align-self:start;height:var(--schedule-panel-height,100%);transform:translateY(var(--schedule-panel-shift,-12px))}
 }
+/* Bottom capsule mirrors the side divider; reserve space, never scroll the overview. */
+#bottom-adjuster{display:none}
+@media (min-width:621px){
+ #bottom-adjuster{display:block;position:absolute;z-index:9;left:calc((100% - var(--side-gap))/2);bottom:max(0px,calc(var(--dock-clearance,96px) - 18px));transform:translateX(-50%)}
+ #bottom-resizer{display:flex;align-items:center;justify-content:center;width:84px;height:24px;padding:0;border:0;background:transparent;cursor:ns-resize;touch-action:none;user-select:none;outline-offset:2px;border-radius:12px}
+ #bottom-resizer .grip-core{display:block;width:46px;height:5px;border-radius:999px;background:#639995;border:1px solid #e1f7ee;box-shadow:0 2px 10px #537d7540;transition:background .14s,box-shadow .14s}
+ #bottom-resizer:hover .grip-core,#bottom-resizer:focus-visible .grip-core,#bottom-resizer.dragging .grip-core{background:#207869;box-shadow:0 1px 12px #537d7540}
+ #bottom-resizer:focus-visible{outline:2px solid #207869}
+ #desk.dragging-bottom,#desk.dragging-bottom *{cursor:ns-resize!important;user-select:none!important;-webkit-user-select:none!important}
+ #bottom-options{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);width:220px;padding:12px 14px;border-radius:14px;border:1px solid #c4d8d2;background:#f7fcfa;color:#254b4d;box-shadow:0 8px 24px #233e3d24;font-size:12px}
+ #bottom-options[hidden]{display:none}
+ #bottom-options label{display:flex;justify-content:space-between;margin-bottom:6px}
+ #bottom-range{width:100%;height:24px;accent-color:#207869;cursor:pointer}
+ #bottom-reset{display:block;margin:6px auto 0;min-height:24px;border:0;background:transparent;color:inherit;font-size:12px;cursor:pointer}
+}
+@media (min-width:621px) and (max-width:800px){#bottom-adjuster{left:50%}}
+@media (prefers-color-scheme:dark){
+ #bottom-resizer .grip-core{background:#a2ccc2;border-color:#d7eee5;box-shadow:0 2px 10px #00121855}
+ #bottom-resizer:hover .grip-core,#bottom-resizer:focus-visible .grip-core,#bottom-resizer.dragging .grip-core{background:#e2fff3}
+ #bottom-resizer:focus-visible{outline-color:#a2ccc2}
+ #bottom-options{background:#193738;border-color:#527a72;color:#e1f3ee}
+ #bottom-range{accent-color:#a2ccc2}
+}
 </style></head>
 <body><main id="desk"><div class="workspace"><header class="topbar"><div class="brand"><span class="brand-icon" aria-hidden="true"><svg class="brand-symbol" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" focusable="false"><circle cx="29.5" cy="16.5" r="8" fill="#F6BF7B"/><path d="M8.5 29.2H39.5" stroke="#ECFFF6" stroke-width="3.3" stroke-linecap="round"/><path d="M9 38.2C15.5 37.2 21 33.6 26.8 33.6H38.5" fill="none" stroke="#A9E1D1" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><h1>逐日</h1><p>STUDY DESK · 2026</p></div></div><div id="topdate" class="topdate">周一至周日 · 每日学习</div></header>
 <div class="grid"><section class="overview" aria-label="学习状态"><div class="clockbox"><div id="hello" class="hello">今天，也在朝目标前进</div><div class="clock"><span id="clock">00:00</span><small id="seconds">00</small></div><div class="clockhint" id="daytext">正在读取时间</div></div>
@@ -287,7 +310,9 @@
 </div></section>
 <section class="panel" aria-label="同一张卡片内的学习时间表与学习任务"><div class="panel-head" id="panelhead"></div><div class="panel-body" id="panelbody"></div><div class="panel-foot" id="panelfoot"></div></section></div>
 <footer class="bottomline"><span>安徽工业大学 · 2027</span><span class="note">日有所学 · 慢慢向前</span></footer>
-</div><button id="space-resizer" type="button" aria-label="拖动调节右侧桌面留白宽度，左右方向键微调，双击恢复默认" role="slider" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="45" aria-valuenow="29" aria-valuetext="留白占屏幕29%"><span class="grip-core" aria-hidden="true"></span></button></main><div id="toast" role="status" aria-live="polite"></div><input id="importFile" type="file" accept="application/json,.json" hidden>
+</div><button id="space-resizer" type="button" aria-label="拖动调节右侧桌面留白宽度，左右方向键微调，双击恢复默认" role="slider" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="45" aria-valuenow="29" aria-valuetext="留白占屏幕29%"><span class="grip-core" aria-hidden="true"></span></button>
+<div id="bottom-adjuster"><button id="bottom-resizer" type="button" title="上下拖动调节底部留白 · 点击精细调整 · 双击恢复默认" aria-label="底部留白，上下拖动或方向键调整，点击打开滑块，双击恢复默认" role="slider" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="237" aria-valuenow="96" aria-valuetext="底部留白96像素"><span class="grip-core" aria-hidden="true"></span></button><div id="bottom-options" role="group" aria-label="精细调整底部留白" hidden><label for="bottom-range">底部留白<output id="bottom-value">96 像素</output></label><input id="bottom-range" type="range" min="0" max="237" value="96" step="1"><button id="bottom-reset" type="button">恢复默认留白</button></div></div>
+</main><div id="toast" role="status" aria-live="polite"></div><input id="importFile" type="file" accept="application/json,.json" hidden>
 <script>
 /* DATA_FROM_PREVIOUS_VERSION */
 
@@ -380,7 +405,7 @@ function todayTasks(day=new Date().getDay()){return (state.schedule||[]).filter(
 function currentTimeline(now=new Date()){let m=now.getHours()*60+now.getMinutes(),day=now.getDay(),previous=(day+6)%7,tasks=todayTasks(day);let cur=tasks.find(t=>tod(t.end)>tod(t.start)&&tod(t.start)<=m&&m<tod(t.end))||tasks.find(t=>tod(t.end)<tod(t.start)&&m>=tod(t.start))||todayTasks(previous).find(t=>tod(t.end)<tod(t.start)&&m<tod(t.end));let next=tasks.find(t=>tod(t.start)>m);if(!next)next=todayTasks((day+1)%7)[0];return {tasks,cur,next}}
 function readState(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){return {}}}
 const stored=readState();
-const state={...stored,checkedVideos:Array.isArray(stored.checkedVideos)?stored.checkedVideos:[],checkedMath:Array.isArray(stored.checkedMath)?stored.checkedMath:[],checkedCircuit:Array.isArray(stored.checkedCircuit)?stored.checkedCircuit:[],dailyChecks:stored.dailyChecks&&typeof stored.dailyChecks==='object'?stored.dailyChecks:{},videoTitles:stored.videoTitles&&typeof stored.videoTitles==='object'?stored.videoTitles:{},schedule:Array.isArray(stored.schedule)?stored.schedule:clone(defaultSchedule),taskNotes:stored.taskNotes&&typeof stored.taskNotes==='object'?stored.taskNotes:{},blankPercent:Number.isFinite(Number(stored.blankPercent))?Number(stored.blankPercent):29};
+const state={...stored,checkedVideos:Array.isArray(stored.checkedVideos)?stored.checkedVideos:[],checkedMath:Array.isArray(stored.checkedMath)?stored.checkedMath:[],checkedCircuit:Array.isArray(stored.checkedCircuit)?stored.checkedCircuit:[],dailyChecks:stored.dailyChecks&&typeof stored.dailyChecks==='object'?stored.dailyChecks:{},videoTitles:stored.videoTitles&&typeof stored.videoTitles==='object'?stored.videoTitles:{},schedule:Array.isArray(stored.schedule)?stored.schedule:clone(defaultSchedule),taskNotes:stored.taskNotes&&typeof stored.taskNotes==='object'?stored.taskNotes:{},blankPercent:Number.isFinite(Number(stored.blankPercent))?Number(stored.blankPercent):29,bottomInset:typeof stored.bottomInset==='number'&&Number.isFinite(stored.bottomInset)?stored.bottomInset:96};
 let migrationFailed=false;
 function migrateSchedule(){
  if(state.scheduleRevision===SCHEDULE_REVISION)return;
@@ -624,7 +649,7 @@ function refreshAll(keepScroll=false){
 }
 
 function exportBackup(){let b=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),...state},null,2)],{type:'application/json'});let url=URL.createObjectURL(b);let a=document.createElement('a');a.href=url;a.download='逐日学习进度备份_'+dayKey()+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('学习计划已导出')}
-document.getElementById('importFile').addEventListener('change',async e=>{let file=e.target.files?.[0];if(!file)return;try{let obj=JSON.parse(await file.text());if(!obj||!Array.isArray(obj.schedule)||!Array.isArray(obj.checkedVideos))throw Error('无效备份');const next={...state,scheduleRevision:SCHEDULE_REVISION,dailyPlans:obj.dailyPlans||{}};for(let key of ['checkedVideos','checkedMath','checkedCircuit','dailyChecks','videoTitles','schedule','taskNotes','blankPercent','scheduleArchive'])if(obj[key]!==undefined)next[key]=clone(obj[key]);localStorage.setItem(KEY+'-before-import-'+Date.now(),JSON.stringify(state));localStorage.setItem(KEY,JSON.stringify(next));Object.assign(state,next);home();refreshAll();applyBlankWidth(state.blankPercent);toast('备份导入完成，导入前记录已另存')}catch(err){toast('导入失败：备份无效或存储不足，原记录未替换')}e.target.value=''});
+document.getElementById('importFile').addEventListener('change',async e=>{let file=e.target.files?.[0];if(!file)return;try{let obj=JSON.parse(await file.text());if(!obj||!Array.isArray(obj.schedule)||!Array.isArray(obj.checkedVideos))throw Error('无效备份');const next={...state,scheduleRevision:SCHEDULE_REVISION,dailyPlans:obj.dailyPlans||{}};for(let key of ['checkedVideos','checkedMath','checkedCircuit','dailyChecks','videoTitles','schedule','taskNotes','blankPercent','bottomInset','scheduleArchive'])if(obj[key]!==undefined)next[key]=clone(obj[key]);localStorage.setItem(KEY+'-before-import-'+Date.now(),JSON.stringify(state));localStorage.setItem(KEY,JSON.stringify(next));Object.assign(state,next);home();refreshAll();applyBlankWidth(state.blankPercent);applyBottomInset(state.bottomInset);toast('备份导入完成，导入前记录已另存')}catch(err){toast('导入失败：备份无效或存储不足，原记录未替换')}e.target.value=''});
 document.getElementById('desk').addEventListener('click',e=>{let b=e.target.closest('button, tr[data-task]');if(!b)return;
  if(b.dataset.action){let a=b.dataset.action;if(a==='back')return back();if(a==='planner')return goto('planner');if(a==='add')return goto('edit',{editing:null});if(a==='restore')return goto('confirm',{confirm:'restore'});if(a==='delete')return goto('confirm',{confirm:'delete',editing:nav.editing});if(a==='backup')return exportBackup();if(a==='import')return document.getElementById('importFile').click();if(a==='confirm'){if(nav.confirm==='restore')state.schedule=clone(defaultSchedule);else state.schedule=state.schedule.filter(t=>t.id!==nav.editing);save();home();refreshAll();toast('日程已更新');return}}
  if(b.dataset.subject){return goto('subject',{subject:b.dataset.subject})}
@@ -711,6 +736,72 @@ grip.addEventListener('keydown',e=>{
 grip.addEventListener('dblclick',()=>{applyBlankWidth(DEFAULT_BLANK_PERCENT,true);toast('留白宽度已恢复默认')});
 window.addEventListener('resize',()=>applyBlankWidth(state.blankPercent));
 applyBlankWidth(state.blankPercent);
+// Bottom clearance is an additive preference, separate from all study records.
+const bottomGrip=document.getElementById('bottom-resizer');
+const bottomOptions=document.getElementById('bottom-options');
+const bottomRange=document.getElementById('bottom-range');
+const DEFAULT_BOTTOM_INSET=96;
+function bottomMax(){
+ // Leave at least 380px for the compact overview plus 103px for header/footer/gutters.
+ return Math.floor(Math.max(0,Math.min(window.innerHeight*.4,window.innerHeight-483)));
+}
+function applyBottomInset(value,commit=false){
+ const requested=typeof value==='number'&&Number.isFinite(value)?value:DEFAULT_BOTTOM_INSET;
+ state.bottomInset=Math.max(0,Math.round(requested));
+ const inset=Math.min(bottomMax(),state.bottomInset);
+ desk.style.setProperty('--dock-clearance',inset+'px');
+ bottomGrip.setAttribute('aria-valuenow',String(inset));
+ bottomGrip.setAttribute('aria-valuemax',String(bottomMax()));
+ bottomGrip.setAttribute('aria-valuetext','底部留白'+inset+'像素');
+ bottomRange.max=String(bottomMax());bottomRange.value=String(inset);
+ document.getElementById('bottom-value').textContent=inset+' 像素';
+ // Resize clamps the displayed inset but preserves the preferred size on larger screens.
+ if(commit){state.bottomInset=inset;save()}
+}
+let bottomPointer=null,bottomStart=null,bottomMoved=false;
+bottomGrip.addEventListener('pointerdown',e=>{
+ if(e.button!==0||bottomPointer!==null)return;
+ e.preventDefault();bottomGrip.focus();
+ bottomPointer=e.pointerId;bottomMoved=false;
+ bottomStart={y:e.clientY,inset:Number(bottomGrip.getAttribute('aria-valuenow'))};
+ bottomGrip.classList.add('dragging');desk.classList.add('dragging-bottom');
+ bottomGrip.setPointerCapture(e.pointerId);
+});
+bottomGrip.addEventListener('pointermove',e=>{
+ if(e.pointerId!==bottomPointer||!bottomStart)return;
+ const delta=bottomStart.y-e.clientY;
+ if(Math.abs(delta)>3)bottomMoved=true;
+ if(bottomMoved){bottomOptions.hidden=true;applyBottomInset(Math.min(bottomMax(),Math.max(0,bottomStart.inset+delta)))}
+});
+function finishBottomGrip(e){
+ if(e.pointerId!==bottomPointer)return;
+ bottomPointer=null;bottomStart=null;
+ bottomGrip.classList.remove('dragging');desk.classList.remove('dragging-bottom');
+ if(bottomMoved)applyBottomInset(state.bottomInset,true);
+}
+bottomGrip.addEventListener('pointerup',finishBottomGrip);
+bottomGrip.addEventListener('pointercancel',finishBottomGrip);
+bottomGrip.addEventListener('lostpointercapture',finishBottomGrip);
+bottomGrip.addEventListener('keydown',e=>{
+ const step=e.shiftKey?10:1,current=Number(bottomGrip.getAttribute('aria-valuenow'));
+ if(e.key==='ArrowUp'){e.preventDefault();applyBottomInset(current+step,true)}
+ else if(e.key==='ArrowDown'){e.preventDefault();applyBottomInset(current-step,true)}
+ else if(e.key==='Home'){e.preventDefault();applyBottomInset(bottomMax(),true)}
+ else if(e.key==='End'){e.preventDefault();applyBottomInset(0,true)}
+});
+bottomGrip.addEventListener('click',()=>{
+ if(bottomMoved){bottomMoved=false;return}
+ bottomOptions.hidden=!bottomOptions.hidden;
+});
+function resetBottomInset(){applyBottomInset(DEFAULT_BOTTOM_INSET,true);bottomOptions.hidden=true;toast('底部留白已恢复默认')}
+bottomGrip.addEventListener('dblclick',resetBottomInset);
+document.getElementById('bottom-reset').addEventListener('click',resetBottomInset);
+bottomRange.addEventListener('input',()=>applyBottomInset(Number(bottomRange.value)));
+bottomRange.addEventListener('change',()=>applyBottomInset(Number(bottomRange.value),true));
+document.addEventListener('pointerdown',e=>{if(!e.target.closest('#bottom-adjuster'))bottomOptions.hidden=true});
+document.getElementById('bottom-adjuster').addEventListener('keydown',e=>{if(e.key==='Escape'){bottomOptions.hidden=true;bottomGrip.focus()}});
+window.addEventListener('resize',()=>applyBottomInset(state.bottomInset));
+applyBottomInset(state.bottomInset);
 // 时间表沿用现有宽度和高度，仅调整整体位置，使底边与左侧“科目进度”卡片底边对齐。
 // 由真实卡片位置计算位移，避免固定像素在不同 MacBook 屏幕上产生偏差。
 const schedulePanel=document.querySelector('.grid > .panel');
