@@ -199,6 +199,24 @@
  .subjectcard{padding-top:10px;padding-bottom:10px}
  .progress-title{margin:0 2px -3px}
 }
+.overview{overflow-y:auto;scrollbar-width:thin}
+.subjectcard.math{grid-column:1/-1;display:grid;grid-template-columns:1fr auto;gap:7px;padding:12px 15px}
+.subjectcard.math .mini-progress{grid-column:1/-1;width:100%}
+.daily-launch{min-height:44px;flex-shrink:0}
+.plan-list{padding-left:19px;margin:8px 0;line-height:1.8;font-size:13px}
+.plan-list li{margin:5px 0;overflow-wrap:anywhere}
+.plan-detail{font-size:13px;line-height:1.8;margin:8px 0;overflow-wrap:anywhere}
+.primary:focus-visible,.secondary:focus-visible,.subjectcard:focus-visible,.item:focus-visible{outline:3px solid #499e8c;outline-offset:3px}
+/* Decorative overflow must not become a focus-scrollable container. */
+@media(min-width:621px){#desk{overflow:clip}}
+@media(min-width:621px) and (max-height:840px){
+ .overview{gap:7px}.clockbox{padding:2px 5px}.clock{font-size:58px}
+ .currentcard{padding:12px 16px}.currentcard .taskname{font-size:22px}
+ .timerrow{margin-top:8px;margin-bottom:7px}.countdown-value{font-size:55px}
+ .currentcard .upnext{margin-top:8px;padding-top:7px}
+ .subjectcard{padding:9px 12px;gap:5px}.subjectcard .glyph{font-size:20px}
+ .subjectcard.math{padding:10px 12px}
+}
 </style></head>
 <body><main id="desk"><div class="workspace"><header class="topbar"><div class="brand"><span class="brand-icon" aria-hidden="true"><svg class="brand-symbol" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" focusable="false"><circle cx="29.5" cy="16.5" r="8" fill="#F6BF7B"/><path d="M8.5 29.2H39.5" stroke="#ECFFF6" stroke-width="3.3" stroke-linecap="round"/><path d="M9 38.2C15.5 37.2 21 33.6 26.8 33.6H38.5" fill="none" stroke="#A9E1D1" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><h1>逐日</h1><p>STUDY DESK · 2026</p></div></div><div id="topdate" class="topdate">周一至周日 · 每日学习</div></header>
 <div class="grid"><section class="overview" aria-label="学习状态"><div class="clockbox"><div id="hello" class="hello">今天，也在朝目标前进</div><div class="clock"><span id="clock">00:00</span><small id="seconds">00</small></div><div class="clockhint" id="daytext">正在读取时间</div></div>
@@ -217,7 +235,8 @@
   <div class="progressbar" id="timerprogress" role="progressbar" aria-label="本时段已经过去的时间比例" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="timerline"></i></div>
   <div class="upnext"><span class="nextcaption">接下来</span><span id="nexttask">正在读取下一项</span></div>
 </div>
-<div class="progress-title"><span>科目进度</span><span class="progress-sub">点按卡片查看学习路线</span></div><div class="subjectcards"><button class="subjectcard" data-subject="mock"><span class="glyph">◈</span><span class="subjectname">模拟电子技术</span><span id="mocknum" class="ratio">0 / 69</span><span class="mini-progress"><i id="mockbar"></i></span></button><button class="subjectcard circuit" data-subject="circuit"><span class="glyph">◎</span><span class="subjectname">电路</span><span id="circuitnum" class="ratio">0 / 6</span><span class="mini-progress"><i id="circuitbar"></i></span></button></div></section>
+<button class="primary daily-launch" data-action="daily">查看今日具体任务</button>
+<div class="progress-title"><span>科目进度</span><span class="progress-sub">点按卡片查看学习路线</span></div><div class="subjectcards"><button class="subjectcard math" data-subject="math"><span class="subjectname">高数 · 基础 → 强化</span><span id="mathnum" class="ratio">0 / 56</span><span class="mini-progress"><i id="mathbar"></i></span></button><button class="subjectcard" data-subject="mock"><span class="glyph" aria-hidden="true">◈</span><span class="subjectname">模拟电子技术</span><span id="mocknum" class="ratio">0 / 69</span><span class="mini-progress"><i id="mockbar"></i></span></button><button class="subjectcard circuit" data-subject="circuit"><span class="glyph" aria-hidden="true">◎</span><span class="subjectname">电路</span><span id="circuitnum" class="ratio">0 / 6</span><span class="mini-progress"><i id="circuitbar"></i></span></button></div></section>
 <section class="panel" aria-label="同一张卡片内的学习时间表与学习任务"><div class="panel-head" id="panelhead"></div><div class="panel-body" id="panelbody"></div><div class="panel-foot" id="panelfoot"></div></section></div>
 <footer class="bottomline"><span>安徽工业大学 · 2027</span><span class="note">日有所学 · 慢慢向前</span></footer>
 </div><button id="space-resizer" type="button" aria-label="拖动调节右侧桌面留白宽度，左右方向键微调，双击恢复默认" role="slider" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="45" aria-valuenow="29" aria-valuetext="留白占屏幕29%"><span class="grip-core" aria-hidden="true"></span></button></main><div id="toast" role="status" aria-live="polite"></div><input id="importFile" type="file" accept="application/json,.json" hidden>
@@ -256,7 +275,7 @@ const circuitUnits=[
 {name:'三相电路',detail:'三相交流电动势；三相电源联结、线电压与相电压；对称三相电路的电压、电流、功率计算。'},
 {name:'动态电路的时域分析',detail:'换路定律及初始条件；一阶电路零输入、零状态和全响应；时间常数；三要素法。'}
 ];
-const defaultSchedule=[
+const legacySchedule=[
 {"id":"x1","start":"07:00","end":"07:30","title":"起床、洗漱、早餐","subject":"生活","type":"life","desc":"整理好当天学习用品","days":[0,1,2,3,4,5,6]},
 {"id":"x2","start":"07:30","end":"08:00","title":"背英语新单词","subject":"英语","type":"study","desc":"新词记忆，配合例句","days":[0,1,2,3,4,5,6]},
 {"id":"x3","start":"08:00","end":"10:00","title":"学习高数","subject":"高数","type":"study","desc":"新知识、例题和练习题","days":[0,1,2,3,4,5,6]},
@@ -277,6 +296,30 @@ const defaultSchedule=[
 {"id":"x17","start":"23:00","end":"07:00","title":"睡眠","subject":"睡眠","type":"break","desc":"保证八小时睡眠（跨午夜）","days":[0,1,2,3,4,5,6]}
 ];
 
+const SCHEDULE_REVISION='2026-10-10-rounded-hours';
+const defaultSchedule=[
+['09:00','10:00','洗漱、单词、当天计划','英语','study','洗漱15分钟；单词30分钟；计划与机动15分钟。不安排早餐。'],
+['10:00','12:00','高数：看课与独立练习','高数','study','45分钟学习、10分钟休息、45分钟学习、20分钟休息；以理解和独立做题为准。'],
+['12:00','13:00','午餐、休息','生活','life','用餐、走动或短暂休息。'],
+['13:00','15:00','英语：刘晓燕课程与练习','英语','study','跟学成刘晓燕课程；45分钟学习、10分钟休息、45分钟练习订正、20分钟休息。'],
+['15:00','17:00','模电：看课与对应习题','模拟电子技术','study','45分钟学习、10分钟休息、45分钟练习；最后20分钟休息并准备健身。'],
+['17:00','19:30','健身、往返及洗澡','运动','life','包含往返与洗澡，不是连续训练2.5小时；按身体状态安排强度。'],
+['19:30','20:30','晚餐、休息','生活','life','健身后用餐和放松。'],
+['20:30','21:00','机动时间','休息','break','处理杂事、休息；不默认用来补课。'],
+['21:00','23:00','电路：知识点与独立解题','电路','study','45分钟学习、10分钟休息、45分钟解题订正、20分钟休息。'],
+['23:00','00:00','间隔复习、闭卷自测','综合','study','先休息10分钟，再闭卷回忆今天和前几天的知识、重做错题；周日复盘补欠。'],
+['00:00','01:00','自由活动、洗漱、睡前放松','生活','life','不安排新课，给睡前留出缓冲。'],
+['01:00','09:00','睡眠','睡眠','break','固定八小时睡眠。']
+].map((t,i)=>({id:'r20261010-'+i,start:t[0],end:t[1],title:t[2],subject:t[3],type:t[4],desc:t[5],days:[0,1,2,3,4,5,6]}));
+const mathStages=[
+{key:'summer',name:'2026年暑期基础班',titles:[
+'数学1A（函数-复合函数）','数学1B（初等函数-分段函数）','【数学】2027暑期巅峰营1（上）','数学2A（隐函数-函数周期性）','数学2B（数列极限-例3）','【数学】2027暑期巅峰营1（中）','高数3A（函数极限定义上）','高数3B（函数极限定义下-无穷大和无穷小）','【数学】2027暑期巅峰营1（下）','数学4A（无穷小量性质-例题13）','数学4B（例题14-例题19）','数学5A（例题20-间断点上）','数学5B（间断点下-介值定理）','数学6A（零点定理-导数定义例题3）','数学6B（导数定义例题4-导数几何意义）','数学7A（求导公式-反函数求导）','数学7B（高阶导数-对数求导法上）','数学8A（对数求导法下-函数微分）','数学8B（洛必达上）','数学9A（洛必达下）','数学9B（导数应用单调性-极值）','数学10A（最值-单调性证明不等式上）','数学10B（单调性证明不等式下-拐点）','数学11A（不定积分的概念-公式3）','数学11B（不定积分公式4-凑微分法1）','数学12A（凑微分法2）','数学12B（三角换元）','数学13A（根式换元-分部积分1）','数学13B（分部积分2-有理函数积分）','数学14A（有理函数积分2-定积分性质5）','数学14B（定积分性质6-变上限积分）','数学15A（N-L公式-根式换元）','数学15B（分部积分-点火公式）','数学16A（定积分应用与证明-广义积分1）','数学16B（广义积分2-代数余子式）','数学17A（行列式性质-按行按列展开1）','数学17B（按行按列展开2-相加造1法）','数学18A（克莱姆法则-矩阵线性运算）','数学18B（矩阵乘法-转置）','数学19A（矩阵的幂-逆矩阵的定义）','数学19B（逆矩阵的性质-可逆的充要条件）','高数新桥第20B（矩阵的初等变换-初等变换求逆矩阵）','高数新桥第20A矩阵的初等变换-初等变换求逆矩阵）','数学21（期末试卷讲解）']},
+{key:'autumn',name:'2026年秋季强化班',titles:[
+'数学1A（行列式定义-展开定理）','数学1B（展开定理的推论-行列式性质3）','数学2A（性质4-例11（1））','数学2B（例11（2）-矩阵的乘法上）','数学3A（矩阵的乘法下-矩阵的幂）','数学3B（方阵的行列式-矩阵的逆上）','数学4A（逆矩阵下-初等矩阵上）','数学4B（初等矩阵下-初等变换求逆矩阵）','数学5A（解矩阵方程）','数学5B（矩阵的秩-行阶梯形）','数学6A（行最简形-向量的定义）','数学6B（线性组合-线性相关与无关的性质）']}
+];
+const mathLessons=mathStages.flatMap((g,stage)=>g.titles.map((title,i)=>({id:g.key+'-'+pad(i+1),title,stage,index:i})));
+const mathDone=id=>state.checkedMath.includes(id);
+
 const SUBJECTS=['高数','英语','模拟电子技术','电路','综合','运动','生活','休息','睡眠'];
 function range(a,b){return Array.from({length:b-a+1},(_,i)=>i+a)}
 function clone(x){return JSON.parse(JSON.stringify(x))}
@@ -289,12 +332,22 @@ function todayTasks(day=new Date().getDay()){return (state.schedule||[]).filter(
 function currentTimeline(now=new Date()){let m=now.getHours()*60+now.getMinutes(),day=now.getDay(),previous=(day+6)%7,tasks=todayTasks(day);let cur=tasks.find(t=>tod(t.end)>tod(t.start)&&tod(t.start)<=m&&m<tod(t.end))||tasks.find(t=>tod(t.end)<tod(t.start)&&m>=tod(t.start))||todayTasks(previous).find(t=>tod(t.end)<tod(t.start)&&m<tod(t.end));let next=tasks.find(t=>tod(t.start)>m);if(!next)next=todayTasks((day+1)%7)[0];return {tasks,cur,next}}
 function readState(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){return {}}}
 const stored=readState();
-const state={checkedVideos:Array.isArray(stored.checkedVideos)?stored.checkedVideos:[],checkedCircuit:Array.isArray(stored.checkedCircuit)?stored.checkedCircuit:[],dailyChecks:stored.dailyChecks&&typeof stored.dailyChecks==='object'?stored.dailyChecks:{},videoTitles:stored.videoTitles&&typeof stored.videoTitles==='object'?stored.videoTitles:{},schedule:Array.isArray(stored.schedule)?stored.schedule:clone(defaultSchedule),taskNotes:stored.taskNotes&&typeof stored.taskNotes==='object'?stored.taskNotes:{},blankPercent:Number.isFinite(Number(stored.blankPercent))?Number(stored.blankPercent):29};
-// Migrate only a recognizably unchanged 30-minute morning break; never rewrite user customized times.
-if(Array.isArray(stored.schedule)&&state.schedule.some(t=>t.id==='x4'&&t.start==='10:00'&&t.end==='10:30'&&t.title==='休息'&&t.desc==='离开座位，活动一下')&&!state.schedule.some(t=>t.id==='x4b')){
- const i=state.schedule.findIndex(t=>t.id==='x4');state.schedule[i]={...state.schedule[i],end:'10:15',title:'短休息',desc:'离开座位、喝水、活动肩颈，15分钟即可'};
- state.schedule.splice(i+1,0,clone(defaultSchedule.find(t=>t.id==='x4b')));
+const state={...stored,checkedVideos:Array.isArray(stored.checkedVideos)?stored.checkedVideos:[],checkedMath:Array.isArray(stored.checkedMath)?stored.checkedMath:[],checkedCircuit:Array.isArray(stored.checkedCircuit)?stored.checkedCircuit:[],dailyChecks:stored.dailyChecks&&typeof stored.dailyChecks==='object'?stored.dailyChecks:{},videoTitles:stored.videoTitles&&typeof stored.videoTitles==='object'?stored.videoTitles:{},schedule:Array.isArray(stored.schedule)?stored.schedule:clone(defaultSchedule),taskNotes:stored.taskNotes&&typeof stored.taskNotes==='object'?stored.taskNotes:{},blankPercent:Number.isFinite(Number(stored.blankPercent))?Number(stored.blankPercent):29};
+let migrationFailed=false;
+function migrateSchedule(){
+ if(state.scheduleRevision===SCHEDULE_REVISION)return;
+ const next={...state,schedule:clone(defaultSchedule),scheduleRevision:SCHEDULE_REVISION};
+ try{
+  // Back up the entire prior state before the explicitly requested one-time schedule replacement.
+  if(Object.keys(stored).length){
+   const backupKey=KEY+'-before-'+SCHEDULE_REVISION;
+   if(localStorage.getItem(backupKey)===null)localStorage.setItem(backupKey,JSON.stringify(stored));
+   next.scheduleArchive=[...(Array.isArray(state.scheduleArchive)?state.scheduleArchive:[]),{replacedAt:new Date().toISOString(),schedule:clone(state.schedule)}];
+  }
+  localStorage.setItem(KEY,JSON.stringify(next));Object.assign(state,next);
+ }catch(e){migrationFailed=true;toast('未能保存备份，保留旧日程。请先导出备份，再恢复新版时间表。')}
 }
+migrateSchedule();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){toast('当前浏览器可能无法保存，请导出备份')}}
 function toast(str){let el=document.getElementById('toast');el.textContent=str;el.classList.add('visible');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('visible'),2450)}
 const order=stages.flatMap(s=>s.ids);const done=(id)=>state.checkedVideos.includes(id);const videoTitle=id=>state.videoTitles[id]||videoTitles[id-1]||'待核对的视频标题';
@@ -305,6 +358,7 @@ let nav=rootNav();
 function goto(view,fields={}){
  const next={...rootNav(),view,...fields};
  if(view==='stage')next.subject='mock';
+ if(view==='mathstage')next.subject='math';
  if(view==='unit')next.subject='circuit';
  if(view==='confirm'&&fields.editing===undefined)next.editing=nav.editing;
  if(Object.keys(next).every(key=>next[key]===nav[key]))return;
@@ -314,6 +368,7 @@ function goto(view,fields={}){
 function back(){
  switch(nav.view){
    case 'stage':return goto('subject',{subject:'mock'});
+   case 'mathstage':return goto('subject',{subject:'math'});
    case 'unit':return goto('subject',{subject:'circuit'});
    case 'confirm':return nav.confirm==='delete' ? goto('edit',{editing:nav.editing}) : goto('planner');
    case 'edit':return goto('planner');
@@ -324,7 +379,36 @@ function home(){nav=rootNav();renderCard()}
 function header(title,small='时间安排',actions=''){let root=nav.view==='schedule';return `${root?'':'<button class="backbtn" data-action="back" aria-label="返回上一层">←</button>'}<div class="panel-meta"><div class="panel-kicker">${safe(small)}</div><h2 class="panel-title">${safe(title)}</h2></div><div class="panel-side">${actions}</div>`}
 function info(kicker,title,detail){return `<div class="info"><span>${safe(kicker)}</span><h3>${safe(title)}</h3>${detail?`<p>${safe(detail)}</p>`:''}</div>`}
 function taskById(id){return state.schedule.find(t=>t.id===id)}
-function taskSubject(task){return task?.subject==='模拟电子技术'?'mock':task?.subject==='电路'?'circuit':null}
+function taskSubject(task){return task?.subject==='高数'?'math':task?.subject==='模拟电子技术'?'mock':task?.subject==='电路'?'circuit':null}
+function mathCard(){return `<div class="content">${info('精英增强版 · 真实课程目录','先基础，再强化','暑期基础班44项；秋季强化班当前12项。保留原目录顺序，包括基础班内的3项巅峰营。')}${mathStages.map((g,i)=>{const lessons=mathLessons.filter(x=>x.stage===i),n=lessons.filter(x=>mathDone(x.id)).length;return `<button class="item" data-mathstage="${i}"><span class="number">${i+1}</span><span class="details"><b>${safe(g.name)}</b><small>${n}/${lessons.length} 已完成${i===1?' · 基础班学完后接着上':''}</small></span><span class="arrow">›</span></button>`}).join('')}<div class="notice">在精英增强版中播放，学完并做对应练习后回来打卡。这里不会读取或同步播放器位置；秋季后续新上传课程暂未包含。</div></div>`}
+function mathStageCard(i){const g=mathStages[i];if(!g)return '';const lessons=mathLessons.filter(x=>x.stage===i);return `<div class="content">${info('高数 · '+lessons.filter(x=>mathDone(x.id)).length+'/'+lessons.length+' 已完成',g.name,'每项保留应用中的原始名称；看课后做题，没学完的长课可以分两天。')}<div class="blocktitle">点击课时打卡 · 不是播放按钮</div>${lessons.map(x=>`<button class="item ${mathDone(x.id)?'done':''}" data-mathlesson="${x.id}" aria-pressed="${mathDone(x.id)}"><span class="checkbox" aria-hidden="true">${mathDone(x.id)?'✓':''}</span><span class="details"><b>${pad(x.index+1)} · ${safe(x.title)}</b><small>${mathDone(x.id)?'已完成 · 点击撤销':'未完成 · 完成看课和练习后勾选'}</small></span></button>`).join('')}</div>`}
+function dailyPlan(now=new Date()){
+ const key=dayKey(now);if(!state.dailyPlans||typeof state.dailyPlans!=='object')state.dailyPlans={};
+ if(!state.dailyPlans[key]){
+  state.dailyPlans[key]={math:mathLessons.filter(x=>!mathDone(x.id)).slice(0,1).map(x=>x.id),mock:order.filter(id=>!done(id)).slice(0,2),circuit:circuitUnits.findIndex((g,i)=>!state.checkedCircuit.includes(i)),review:now.getDay()===0};save();
+ }
+ return state.dailyPlans[key];
+}
+function dailyCard(){
+ const plan=dailyPlan(),math=plan.math.map(id=>mathLessons.find(x=>x.id===id)).filter(Boolean),mock=plan.mock.filter(id=>videoTitles[id-1]),unit=circuitUnits[plan.circuit],mr=mathLessons.filter(x=>!mathDone(x.id)).length,vr=order.filter(id=>!done(id)).length;
+ const list=items=>`<ul class="plan-list">${items.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>`;
+ return `<div class="content">${info(dayKey()+' · '+(plan.review?'复习补欠日':'今日具体任务'),'今天学什么','任务按本地打卡进度生成，今天固定不跳号；未完成的课明天继续。不与播放器进度自动同步。')}
+ ${migrationFailed?'<div class="confirm">旧日程备份未成功，暂未替换作息；以下是新版建议。请先导出备份。</div>':''}
+ ${info('09:00—10:00','洗漱、单词、当天计划','洗漱15分钟；单词30分钟，优先复习已学词，再少量新词；余下时间安排任务。')}
+ ${info('10:00—12:00 · 高数',plan.review?'高数复习与补欠':'高数 · 今日目标1项',plan.review?'先补未完成的课程，再闭卷回忆本周公式、重做错题；不强制上新课。':'两段45分钟：看课、暂停复述、对应练习；其余30分钟休息。长课没学完就分两天，不为赶数量跳过练习。')}
+ ${math.length?list(math.map(x=>(mathDone(x.id)?'✓ 已完成 · ':'')+mathStages[x.stage].name+' · '+x.title)):list(['现有高数目录已完成，转入错题复习；留意秋季课程更新。'])}
+ <button class="secondary" data-subject="math">查看高数课单与打卡</button>
+ ${info('13:00—15:00 · 英语','跟学成刘晓燕当前课程','先接播放器中下一节未完成的课，再完成配套语法或阅读练习并订正。不导入精英英语；尚未取得刘晓燕课表，不能填入未经核实的课名。')}
+ ${info('15:00—17:00 · 模电',plan.review?'模电复习与补欠':'模电 · 目标最多2节','每节看课后画电路、解释原理、独立做对应题。90分钟净学习容不下两节时只学一节，最后20分钟准备健身。')}
+ ${mock.length?list(mock.map(id=>(done(id)?'✓ 已完成 · ':'')+'第'+id+'节 · '+videoTitle(id))):list(['69节已完成，复习薄弱阶段；另补直流稳压电源。'])}
+ <button class="secondary" data-subject="mock">查看模电路线与打卡</button>
+ ${info('17:00—19:30 / 19:30—20:30','健身、洗澡 → 晚饭','运动时段包含往返和洗澡；晚饭后休息，20:30—21:00留作机动。')}
+ ${info('21:00—23:00 · 电路',unit?unit.name:'电路综合复习',unit?unit.detail:'闭卷整理六模块关系，混合做题并订正。')}
+ <p class="plan-detail">电路按知识模块安排：今天从未掌握的小节开始，学习一个知识点、独立做对应例题和练习，再订正。模块全部掌握才打卡；6个模块不是6节视频，未取得逐课目录。</p><button class="secondary" data-subject="circuit">查看电路模块</button>
+ ${info('23:00—00:00 / 00:00—01:00','闭卷自测 → 放松 → 睡眠','先休息10分钟，再用50分钟回忆当天及前几天所学、重做错题。午夜后不学新课，01:00睡至09:00。')}
+ <div class="blocktitle">一轮预计用时 · 试行估算</div><p class="plan-detail">高数还剩${mr}项：若每周6个新课日、每天完成1项，约${Math.ceil(mr/6)}周；从零覆盖56项约10周。模电还剩${vr}节：每天1～2节、每周6天，约${Math.ceil(vr/12)}～${Math.ceil(vr/6)}周。</p>
+ <div class="notice">每周日保留原学习时段，但用来复习、补欠和自测。上述估算未核对视频时长，包含课后练习的速度需试行后调整；电路缺逐课目录，英语缺课程目录，因此还不能可靠估算所有科目的总完成日期。现有模电清单也不等于完整考纲。</div></div>`;
+}
 function taskCheck(id){return (state.dailyChecks[dayKey()]||[]).includes(id)}
 function checkTask(id){let k=dayKey(),a=state.dailyChecks[k]||[];state.dailyChecks[k]=a.includes(id)?a.filter(x=>x!==id):[...a,id];save();refreshAll(true)}
 function mockCard(){let n=state.checkedVideos.filter(v=>v>=1&&v<=69).length;return `<div class="content">${info('69 节必学视频', `${n} / 69 已完成`,'按老师圈选内容学习；这里仅调整观看顺序，学习进度可以逐项打卡。')}<div class="blocktitle">零基础推荐顺序 · 共 8 个阶段</div>${stages.map((g,i)=>{let c=g.ids.filter(done).length;return `<button class="item" data-stage="${i}"><span class="number">${pad(i+1)}</span><span class="details"><b>${safe(g.name)}</b><small>${safe(g.section)} · 已完成 ${c}/${g.ids.length}</small></span><span class="arrow">›</span></button>`}).join('')}<div class="notice">提醒：学校考纲还包括“直流稳压电源”，但这69个视频标题中没有单独列出对应部分。</div></div>`}
@@ -373,7 +457,9 @@ function confirmCard(){return `<div class="content"><div class="confirm">${nav.c
 function genericCard(name){let tasks=todayTasks().filter(t=>t.subject===name);return `<div class="content">${info('每日安排',name,`今天共有 ${tasks.length} 个相关时段，按实际进度学习即可。`)}${tasks.map(t=>`<button class="item" data-task="${safe(t.id)}"><span class="number" style="width:56px;font-size:11px">${t.start}</span><span class="details"><b>${safe(t.title)}</b><small>${safe(t.desc||'')}</small></span><span class="arrow">›</span></button>`).join('')}</div>`}
 function renderCard(keepScroll=false){let head='',body='',foot='';let sc=document.getElementById('panelbody');let prev=keepScroll?sc.scrollTop:0;let v=nav.view;
  if(v==='schedule'){({head,body,foot}=scheduleCard())}
- else if(v==='subject'){let isM=nav.subject==='mock';head=header(isM?'模拟电子技术':'电路','LEARNING PATH',isM?`${state.checkedVideos.length}/69`:`${state.checkedCircuit.length}/6`);body=isM?mockCard():circuitCard();foot=isM?'69节视频 · 按老师圈选清单排序并分阶段学习':'学校考纲 · 6个知识模块'}
+ else if(v==='subject'){let isM=nav.subject==='mock',isMath=nav.subject==='math';head=header(isMath?'高数':isM?'模拟电子技术':'电路','LEARNING PATH',isMath?`${mathLessons.filter(x=>mathDone(x.id)).length}/56`:isM?`${state.checkedVideos.length}/69`:`${state.checkedCircuit.length}/6`);body=isMath?mathCard():isM?mockCard():circuitCard();foot=isMath?'暑期基础 → 秋季强化 · 本地手动打卡':isM?'69节视频 · 按老师圈选清单排序并分阶段学习':'学校考纲 · 6个知识模块'}
+ else if(v==='mathstage'){head=header(mathStages[nav.stage].name,'MATH LESSONS');body=mathStageCard(nav.stage);foot='看课与练习完成后勾选 · 与增强版播放位置独立'}
+ else if(v==='daily'){head=header('今日具体任务','TODAY STUDY');body=dailyCard();foot='每日课单固定 · 未完成不跳过 · 周日复习补欠'}
  else if(v==='stage'){let g=stages[nav.stage];head=header(g.name,'VIDEO LESSONS',`${g.ids.filter(done).length}/${g.ids.length}`);body=stageCard(nav.stage);foot='点击视频即可打卡 · 勾选状态自动保存'}
  else if(v==='unit'){head=header(circuitUnits[nav.unit].name,'CIRCUIT BASICS');body=unitCard(nav.unit);foot='本模块学完后标记完成'}
  else if(v==='task'){let t=taskById(nav.task);head=header(t?.title||'任务已删除','TODAY TASK');body=t?subTaskCard(t):'<div class="content">这个时段已经不存在。</div>';foot='日程打卡与视频打卡相互独立'}
@@ -437,14 +523,19 @@ function refreshAll(keepScroll=false){
  document.getElementById('mockbar').style.width=(state.checkedVideos.length/69*100)+'%';
  document.getElementById('circuitnum').textContent=state.checkedCircuit.length+' / 6 模块';
  document.getElementById('circuitbar').style.width=(state.checkedCircuit.length/6*100)+'%';
- if(['schedule','stage','subject','unit'].includes(nav.view))renderCard(keepScroll);
+ document.getElementById('mathnum').textContent=mathLessons.filter(x=>mathDone(x.id)).length+' / 56 项';
+ document.getElementById('mathbar').style.width=(mathLessons.filter(x=>mathDone(x.id)).length/56*100)+'%';
+ if(['schedule','stage','subject','unit','mathstage','daily'].includes(nav.view))renderCard(keepScroll);
 }
 
 function exportBackup(){let b=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),...state},null,2)],{type:'application/json'});let url=URL.createObjectURL(b);let a=document.createElement('a');a.href=url;a.download='逐日学习进度备份_'+dayKey()+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('学习计划已导出')}
-document.getElementById('importFile').addEventListener('change',async e=>{let file=e.target.files?.[0];if(!file)return;try{let obj=JSON.parse(await file.text());if(!obj||!Array.isArray(obj.schedule)||!Array.isArray(obj.checkedVideos))throw Error('无效备份');for(let key of ['checkedVideos','checkedCircuit','dailyChecks','videoTitles','schedule','taskNotes','blankPercent'])if(obj[key]!==undefined)state[key]=clone(obj[key]);save();home();refreshAll();applyBlankWidth(state.blankPercent);toast('备份导入完成')}catch(err){toast('导入失败：文件格式不正确')}e.target.value=''});
+document.getElementById('importFile').addEventListener('change',async e=>{let file=e.target.files?.[0];if(!file)return;try{let obj=JSON.parse(await file.text());if(!obj||!Array.isArray(obj.schedule)||!Array.isArray(obj.checkedVideos))throw Error('无效备份');const next={...state,scheduleRevision:SCHEDULE_REVISION,dailyPlans:obj.dailyPlans||{}};for(let key of ['checkedVideos','checkedMath','checkedCircuit','dailyChecks','videoTitles','schedule','taskNotes','blankPercent','scheduleArchive'])if(obj[key]!==undefined)next[key]=clone(obj[key]);localStorage.setItem(KEY+'-before-import-'+Date.now(),JSON.stringify(state));localStorage.setItem(KEY,JSON.stringify(next));Object.assign(state,next);home();refreshAll();applyBlankWidth(state.blankPercent);toast('备份导入完成，导入前记录已另存')}catch(err){toast('导入失败：备份无效或存储不足，原记录未替换')}e.target.value=''});
 document.getElementById('desk').addEventListener('click',e=>{let b=e.target.closest('button, tr[data-task]');if(!b)return;
  if(b.dataset.action){let a=b.dataset.action;if(a==='back')return back();if(a==='planner')return goto('planner');if(a==='add')return goto('edit',{editing:null});if(a==='restore')return goto('confirm',{confirm:'restore'});if(a==='delete')return goto('confirm',{confirm:'delete',editing:nav.editing});if(a==='backup')return exportBackup();if(a==='import')return document.getElementById('importFile').click();if(a==='confirm'){if(nav.confirm==='restore')state.schedule=clone(defaultSchedule);else state.schedule=state.schedule.filter(t=>t.id!==nav.editing);save();home();refreshAll();toast('日程已更新');return}}
  if(b.dataset.subject){return goto('subject',{subject:b.dataset.subject})}
+ if(b.dataset.action==='daily'){return goto('daily')}
+ if(b.dataset.mathstage!==undefined){return goto('mathstage',{stage:Number(b.dataset.mathstage)})}
+ if(b.dataset.mathlesson!==undefined){const id=b.dataset.mathlesson;if(!mathLessons.some(x=>x.id===id))return;state.checkedMath=mathDone(id)?state.checkedMath.filter(x=>x!==id):[...state.checkedMath,id];save();refreshAll(true);toast(mathDone(id)?'高数课时已完成':'已取消课时完成状态');return}
  if(b.dataset.stage!==undefined){return goto('stage',{stage:Number(b.dataset.stage)})}
  if(b.dataset.unit!==undefined){return goto('unit',{unit:Number(b.dataset.unit)})}
  if(b.dataset.video!==undefined){let id=Number(b.dataset.video);state.checkedVideos=done(id)?state.checkedVideos.filter(v=>v!==id):[...state.checkedVideos,id];save();refreshAll(true);toast(done(id)?'视频已标记完成':'已取消视频完成状态');return}
