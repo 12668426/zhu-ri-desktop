@@ -5,8 +5,8 @@ new Function(script);
 const prefix=script.split('// 真实的逐秒倒计时。')[0];
 const KEY='zhuri-anhui-study-v1';
 function boot(db={},fail=false){
- const ctx=vm.createContext({localStorage:{getItem:k=>db[k]??null,setItem:(k,v)=>{if(fail)throw Error('full');db[k]=v}},document:{getElementById:()=>({classList:{add(){},remove(){}}})},setTimeout:()=>0,clearTimeout(){}});
- vm.runInContext(prefix+';globalThis.inspect={state,defaultSchedule,mathLessons,mathStages,diff,tod,currentTimeline,dailyPlan,dailyCard};',ctx);
+ const ctx=vm.createContext({localStorage:{getItem:k=>db[k]??null,setItem:(k,v)=>{if(fail===true||(typeof fail==='function'&&fail(k)))throw Error('full');db[k]=v}},document:{getElementById:()=>({classList:{add(){},remove(){}}})},setTimeout:()=>0,clearTimeout(){}});
+ vm.runInContext(prefix+';globalThis.inspect={state,defaultSchedule,mathLessons,mathStages,diff,tod,currentTimeline,todayTasks,dailyPlan,dailyCard,orderedScheduleRows,movedScheduleRows,scheduleMoveProposal,saveScheduleProposal,saveSchedulePreference,scheduleCard};',ctx);
  return ctx.inspect;
 }
 const original={schedule:[{id:'x1',start:'07:00',end:'08:00',days:[0,1,2,3,4,5,6]}],checkedVideos:[1,2],checkedCircuit:[0],dailyChecks:{'2026-10-09':['x1']},taskNotes:{x1:'kept'},videoTitles:{1:'custom title'},blankPercent:24};
@@ -120,3 +120,56 @@ console.log('PASS: syntax, catalogs, four equal study blocks, time-based daily p
 console.log('PASS: removed daily entry, fixed overview, three course entries, valid unique progress counts and percentages');
 console.log('PASS: bottom capsule drag, keyboard, reset, single-pointer alternative, save-once, viewport clamp, preferred size recovery, additive persistence and unchanged learning records');
 console.log('PASS: downward drag through default to zero, panels fill chosen height, 96px downward expansion, upward shrink and mobile alignment reset');
+// Reordering is independent of completion data and cannot silently mutate time.
+const plain=x=>JSON.parse(JSON.stringify(x));
+const fixture={...plain(r.state),schedule:plain(r.defaultSchedule),scheduleRevision:'2026-10-10-rounded-hours',checkedMath:['summer-01'],checkedVideos:[1,2],checkedCircuit:[0],dailyChecks:{'2026-10-10':['r20261010-1']},taskNotes:{'r20261010-1':'保留备注'},tableOrder:[],syncScheduleDrag:false,customPreference:'keep'};
+const orderDb={[KEY]:JSON.stringify(fixture)},order=boot(orderDb);
+const beforeSchedule=JSON.stringify(order.state.schedule),chronological=order.todayTasks();
+const gym=chronological.find(t=>t.subject==='运动');
+const display=order.movedScheduleRows(chronological,gym.id,2);
+assert.ok(order.saveSchedulePreference({tableOrder:display.map(t=>t.id)}));
+assert.deepEqual(Array.from(order.orderedScheduleRows(order.todayTasks()),t=>t.id),Array.from(display,t=>t.id));
+assert.equal(JSON.stringify(order.state.schedule),beforeSchedule);
+assert.equal(order.currentTimeline(new Date(2026,9,10,17,30)).cur.id,gym.id);
+assert.equal(boot(orderDb).state.syncScheduleDrag,false);
+assert.deepEqual(plain(boot(orderDb).state.tableOrder),plain(order.state.tableOrder));
+assert.equal((order.scheduleCard().body.match(/class="row-grip"/g)||[]).length,12);
+assert.ok(order.scheduleCard().head.includes('aria-checked="false"'));
+assert.equal(order.movedScheduleRows(chronological,'missing',0),null);
+assert.equal(order.movedScheduleRows(chronological,gym.id,-1),null);
+assert.equal(order.movedScheduleRows(chronological,gym.id,12),null);
+const beforePreview=JSON.stringify(order.state),proposal=order.scheduleMoveProposal(display);
+assert.ok(!proposal.error);assert.equal(JSON.stringify(order.state),beforePreview);
+assert.ok(proposal.warnings.some(t=>t.includes('健身')));
+for(const t of proposal.schedule){const old=order.state.schedule.find(o=>o.id===t.id);assert.equal(order.diff(t),order.diff(old));assert.deepEqual(plain(t.days),plain(old.days));assert.equal(t.desc,old.desc)}
+assert.equal(proposal.schedule.reduce((sum,t)=>sum+order.diff(t),0),1440);
+assert.ok(order.saveScheduleProposal(proposal));
+assert.deepEqual(JSON.parse(Object.entries(orderDb).find(([k])=>k.includes('-before-reorder-'))[1]),JSON.parse(beforePreview));
+for(const field of ['checkedMath','checkedVideos','checkedCircuit','dailyChecks','taskNotes','videoTitles','customPreference'])assert.deepEqual(plain(order.state[field]),plain(fixture[field]));
+for(let minute=0;minute<1440;minute++){
+ const hits=order.state.schedule.filter(t=>order.tod(t.end)>order.tod(t.start)?order.tod(t.start)<=minute&&minute<order.tod(t.end):minute>=order.tod(t.start)||minute<order.tod(t.end));
+ assert.equal(hits.length,1,`reordered day overlap or gap ${minute}`);
+}
+assert.equal(order.saveScheduleProposal(proposal),false); // stale preview cannot overwrite newer schedule
+assert.deepEqual(plain(boot(orderDb).state.schedule),plain(order.state.schedule));
+assert.ok(order.scheduleMoveProposal([...chronological.slice(1),chronological[1]]).error);
+const failOrder=boot({[KEY]:JSON.stringify(fixture)},true),failBefore=JSON.stringify(failOrder.state);
+const failProposal=failOrder.scheduleMoveProposal(failOrder.movedScheduleRows(failOrder.todayTasks(),gym.id,2));
+assert.equal(failOrder.saveScheduleProposal(failProposal),false);assert.equal(JSON.stringify(failOrder.state),failBefore);
+const primaryFailDb={[KEY]:JSON.stringify(fixture)},primaryFail=boot(primaryFailDb,k=>k===KEY),primaryBefore=JSON.stringify(primaryFail.state);
+const primaryProposal=primaryFail.scheduleMoveProposal(primaryFail.movedScheduleRows(primaryFail.todayTasks(),gym.id,2));
+assert.equal(primaryFail.saveScheduleProposal(primaryProposal),false);assert.equal(JSON.stringify(primaryFail.state),primaryBefore);
+assert.equal(primaryFailDb[KEY],JSON.stringify(fixture));assert.ok(Object.keys(primaryFailDb).some(k=>k.includes('-before-reorder-')));
+const sleeping=boot({[KEY]:JSON.stringify(fixture)}),sleep=sleeping.todayTasks().find(t=>t.subject==='睡眠');
+assert.ok(sleeping.scheduleMoveProposal(sleeping.movedScheduleRows(sleeping.todayTasks(),sleep.id,0)).warnings.some(x=>x.includes('睡眠')));
+const days=[0,1,2,3,4,5,6],custom=(schedule)=>boot({[KEY]:JSON.stringify({...fixture,schedule,tableOrder:[]})});
+const withGaps=custom([{id:'a',start:'10:00',end:'11:00',days},{id:'b',start:'11:30',end:'13:30',days},{id:'c',start:'14:00',end:'15:00',days}]);
+const gapProposal=withGaps.scheduleMoveProposal(withGaps.movedScheduleRows(withGaps.todayTasks(),'b',0));
+assert.deepEqual(Array.from(gapProposal.ids,id=>{const t=gapProposal.schedule.find(x=>x.id===id);return [id,t.start,t.end]}),[['b','10:00','12:00'],['a','12:30','13:30'],['c','14:00','15:00']]);
+const overnight=custom([{id:'a',start:'21:00',end:'23:00',days},{id:'b',start:'23:00',end:'01:00',days}]);
+assert.ok(!overnight.scheduleMoveProposal(overnight.movedScheduleRows(overnight.todayTasks(),'b',0)).error);
+const overlap=custom([{id:'a',start:'10:00',end:'12:00',days},{id:'b',start:'11:00',end:'13:00',days}]);
+assert.ok(overlap.scheduleMoveProposal(overlap.todayTasks()).error);
+const weekday=new Date().getDay(),mixed=custom([{id:'a',start:'10:00',end:'11:00',days},{id:'b',start:'11:00',end:'12:00',days:[weekday]}]);
+assert.ok(mixed.scheduleMoveProposal(mixed.todayTasks()).error);
+console.log('PASS: both reorder modes, unchanged countdown in display-only mode, preview isolation, fixed durations, complete-day coverage, gym warning, automatic backup, record preservation, reload persistence, stale preview and failed storage protection, gaps, midnight and invalid schedules');

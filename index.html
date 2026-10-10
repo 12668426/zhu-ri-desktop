@@ -286,6 +286,42 @@
  #bottom-options{background:#193738;border-color:#527a72;color:#e1f3ee}
  #bottom-range{accent-color:#a2ccc2}
 }
+/* Timetable reorder controls keep drag and ordinary row navigation separate. */
+.timetable col.col-arrange{width:calc(30% - 32px)}
+.timetable col.col-handle{width:32px}
+.timetable td.reorder-cell{padding:2px!important}
+.row-grip{display:inline-flex;align-items:center;justify-content:center;width:26px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;color:#527180;cursor:grab;touch-action:none;user-select:none}
+.row-grip svg{width:15px;height:15px;pointer-events:none}
+.row-grip:hover,.row-grip:focus-visible{background:#d9eae6;color:#165f53}
+.row-grip:active{cursor:grabbing}
+.timetable tr.row-dragging td{opacity:.55}
+.timetable tr.drop-before td{box-shadow:inset 0 3px #207869!important}
+.timetable tr.drop-after td{box-shadow:inset 0 -3px #207869!important}
+.schedule-view .panel-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+.schedule-controls{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.schedule-sync{display:inline-flex;align-items:center;gap:7px;padding:3px 0;min-height:28px;border:0;background:transparent;color:#f3fbff;font-size:11px;font-weight:650;white-space:nowrap}
+.switch-track{display:block;position:relative;width:32px;height:18px;border-radius:99px;background:#8b9b9f;flex:none}
+.switch-track:after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .15s}
+.schedule-sync[aria-checked=true] .switch-track{background:#207869}
+.schedule-sync[aria-checked=true] .switch-track:after{transform:translateX(14px)}
+.schedule-mode-hint{font-size:10px;color:#d1e3ef}
+.reset-display-order{margin-left:auto;min-height:24px;border:0;background:transparent;color:#d2f1e4;font-size:10px;text-decoration:underline;text-underline-offset:3px;padding:2px}
+#row-move-menu{position:fixed;z-index:15;padding:5px;border:1px solid #c1d8d0;border-radius:10px;background:#f5fcf8;box-shadow:0 6px 20px #183f4326;min-width:100px;color:#254b4d}
+#row-move-menu[hidden]{display:none}
+#row-move-menu button{display:block;width:100%;min-height:30px;padding:5px 12px;border:0;background:transparent;border-radius:6px;text-align:left;font-size:12px;color:inherit}
+#row-move-menu button:hover{background:#d9eae6}
+.schedule-change{border-bottom:1px solid #d5e4de;padding:10px 0;font-size:12px;line-height:1.7}
+.schedule-change b{display:block}.schedule-change small{display:block;font-size:11px;color:#53766d}
+.preview-warning{margin-bottom:12px}
+@media(max-width:1250px){.timetable col.col-arrange{width:calc(29% - 32px)}}
+@media(prefers-color-scheme:dark){
+ .row-grip{color:#abcacb}.row-grip:hover,.row-grip:focus-visible{background:#315950;color:#d6fff0}
+ .schedule-sync{color:#deefee}.schedule-mode-hint{color:#abcacb}.reset-display-order{color:#b2dfd1}
+ #row-move-menu{background:#193738;border-color:#527a72;color:#e1f3ee}
+ #row-move-menu button:hover{background:#315950}
+ .schedule-change{border-color:#34534d}.schedule-change small{color:#b2d3c9}
+ .timetable tr.drop-before td{box-shadow:inset 0 3px #9bddc6!important}.timetable tr.drop-after td{box-shadow:inset 0 -3px #9bddc6!important}
+}
 </style></head>
 <body><main id="desk"><div class="workspace"><header class="topbar"><div class="brand"><span class="brand-icon" aria-hidden="true"><svg class="brand-symbol" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" focusable="false"><circle cx="29.5" cy="16.5" r="8" fill="#F6BF7B"/><path d="M8.5 29.2H39.5" stroke="#ECFFF6" stroke-width="3.3" stroke-linecap="round"/><path d="M9 38.2C15.5 37.2 21 33.6 26.8 33.6H38.5" fill="none" stroke="#A9E1D1" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><h1>逐日</h1><p>STUDY DESK · 2026</p></div></div><div id="topdate" class="topdate">周一至周日 · 每日学习</div></header>
 <div class="grid"><section class="overview" aria-label="学习状态"><div class="clockbox"><div id="hello" class="hello">今天，也在朝目标前进</div><div class="clock"><span id="clock">00:00</span><small id="seconds">00</small></div><div class="clockhint" id="daytext">正在读取时间</div></div>
@@ -314,7 +350,7 @@
 <footer class="bottomline"><span>安徽工业大学 · 2027</span><span class="note">日有所学 · 慢慢向前</span></footer>
 </div><button id="space-resizer" type="button" aria-label="拖动调节右侧桌面留白宽度，左右方向键微调，双击恢复默认" role="slider" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="45" aria-valuenow="29" aria-valuetext="留白占屏幕29%"><span class="grip-core" aria-hidden="true"></span></button>
 <div id="bottom-adjuster"><button id="bottom-resizer" type="button" title="上下拖动调节底部留白 · 点击精细调整 · 双击恢复默认" aria-label="底部留白，上下拖动或方向键调整，点击打开滑块，双击恢复默认" role="slider" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="237" aria-valuenow="96" aria-valuetext="底部留白96像素"><span class="grip-core" aria-hidden="true"></span></button><div id="bottom-options" role="group" aria-label="精细调整底部留白" hidden><label for="bottom-range">底部留白<output id="bottom-value">96 像素</output></label><input id="bottom-range" type="range" min="0" max="237" value="96" step="1"><button id="bottom-reset" type="button">恢复默认留白</button></div></div>
-</main><div id="toast" role="status" aria-live="polite"></div><input id="importFile" type="file" accept="application/json,.json" hidden>
+</main><div id="toast" role="status" aria-live="polite"></div><div id="row-move-menu" role="menu" aria-label="调整这一行的顺序" hidden><button type="button" role="menuitem" data-move-direction="-1">向上移动</button><button type="button" role="menuitem" data-move-direction="1">向下移动</button></div><input id="importFile" type="file" accept="application/json,.json" hidden>
 <script>
 /* DATA_FROM_PREVIOUS_VERSION */
 
@@ -408,6 +444,10 @@ function currentTimeline(now=new Date()){let m=now.getHours()*60+now.getMinutes(
 function readState(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){return {}}}
 const stored=readState();
 const state={...stored,checkedVideos:Array.isArray(stored.checkedVideos)?stored.checkedVideos:[],checkedMath:Array.isArray(stored.checkedMath)?stored.checkedMath:[],checkedCircuit:Array.isArray(stored.checkedCircuit)?stored.checkedCircuit:[],dailyChecks:stored.dailyChecks&&typeof stored.dailyChecks==='object'?stored.dailyChecks:{},videoTitles:stored.videoTitles&&typeof stored.videoTitles==='object'?stored.videoTitles:{},schedule:Array.isArray(stored.schedule)?stored.schedule:clone(defaultSchedule),taskNotes:stored.taskNotes&&typeof stored.taskNotes==='object'?stored.taskNotes:{},blankPercent:Number.isFinite(Number(stored.blankPercent))?Number(stored.blankPercent):29,bottomInset:typeof stored.bottomInset==='number'&&Number.isFinite(stored.bottomInset)?stored.bottomInset:96};
+// New preferences are additive: upgrading does not change times or course checks.
+state.syncScheduleDrag=stored.syncScheduleDrag!==false;
+state.tableOrder=Array.isArray(stored.tableOrder)?stored.tableOrder.filter(id=>typeof id==='string'):[];
+let rowDrag=null,pendingScheduleMove=null,rowMenuId=null,ignoreRowGripClickUntil=0;
 let migrationFailed=false;
 function migrateSchedule(){
  if(state.scheduleRevision===SCHEDULE_REVISION)return;
@@ -450,7 +490,7 @@ function back(){
    default:return home();
  }
 }
-function home(){nav=rootNav();renderCard()}
+function home(){pendingScheduleMove=null;nav=rootNav();renderCard()}
 function header(title,small='时间安排',actions=''){let root=nav.view==='schedule';return `${root?'':'<button class="backbtn" data-action="back" aria-label="返回上一层">←</button>'}<div class="panel-meta"><div class="panel-kicker">${safe(small)}</div><h2 class="panel-title">${safe(title)}</h2></div><div class="panel-side">${actions}</div>`}
 function info(kicker,title,detail){return `<div class="info"><span>${safe(kicker)}</span><h3>${safe(title)}</h3>${detail?`<p>${safe(detail)}</p>`:''}</div>`}
 function taskById(id){return state.schedule.find(t=>t.id===id)}
@@ -507,23 +547,86 @@ function hourDisplay(minutes){
  const h = Math.floor(m / 60), rest = m % 60;
  return rest ? `${h}小时${rest}分钟` : `${h}小时`;
 }
+// Display ordering never changes the chronological source used by the timer.
+function orderedScheduleRows(tasks){
+ const rank=new Map(state.tableOrder.map((id,i)=>[id,i]));
+ return tasks.slice().sort((a,b)=>(rank.get(a.id)??Infinity)-(rank.get(b.id)??Infinity));
+}
+function movedScheduleRows(rows,id,to){
+ const from=rows.findIndex(t=>t.id===id);
+ if(from<0||!Number.isInteger(to)||to<0||to>=rows.length)return null;
+ const result=rows.slice(),[item]=result.splice(from,1);result.splice(to,0,item);return result;
+}
+function scheduleMoveProposal(rows){
+ const originals=todayTasks(),byId=new Map(originals.map(t=>[t.id,t]));
+ if(rows.length!==originals.length||new Set(rows.map(t=>t.id)).size!==rows.length||rows.some(t=>!byId.has(t.id)))return {error:'日程已变化，请返回时间表后重试。'};
+ if(!originals.length)return {error:'没有可移动的时段。'};
+ const days=t=>JSON.stringify((t.days||[]).slice().sort());
+ if(originals.some(t=>days(t)!==days(originals[0])))return {error:'这些时段适用的星期不同，不能一起自动重排。请在“调整日程”中编辑，或关闭同步调整时间。'};
+ const gaps=[];
+ for(let i=0;i<originals.length-1;i++){
+  const gap=tod(originals[i+1].start)-tod(originals[i].start)-diff(originals[i]);
+  if(gap<0)return {error:'原日程有重叠时段，请先在“调整日程”中修正，或关闭同步调整时间。'};
+  gaps.push(gap);
+ }
+ const anchor=tod(originals[0].start),last=originals[originals.length-1];
+ if(tod(last.start)+diff(last)>anchor+1440)return {error:'原日程超过24小时，不能安全地自动重排。'};
+ const format=m=>pad(Math.floor((m%1440)/60))+':'+pad(m%60);
+ let cursor=anchor;
+ const retimed=rows.map((t,i)=>{const old=byId.get(t.id),duration=diff(old),next={...clone(old),start:format(cursor),end:format(cursor+duration)};cursor+=duration+(gaps[i]||0);return next});
+ const changes=retimed.filter(t=>t.start!==byId.get(t.id).start||t.end!==byId.get(t.id).end).map(t=>({before:clone(byId.get(t.id)),after:t}));
+ const warnings=changes.filter(x=>x.before.subject==='睡眠'||/睡眠|健身/.test(x.before.title)).map(x=>`${x.before.title}：${x.before.start}–${x.before.end} → ${x.after.start}–${x.after.end}`);
+ const replacement=new Map(retimed.map(t=>[t.id,t]));
+ return {schedule:state.schedule.map(t=>replacement.get(t.id)||clone(t)),ids:rows.map(t=>t.id),changes,warnings,base:JSON.stringify({schedule:state.schedule,tableOrder:state.tableOrder})};
+}
+function saveScheduleProposal(proposal){
+ if(!proposal||proposal.error||proposal.base!==JSON.stringify({schedule:state.schedule,tableOrder:state.tableOrder}))return false;
+ const next={...state,schedule:clone(proposal.schedule),tableOrder:proposal.ids.slice()};
+ try{
+  localStorage.setItem(KEY+'-before-reorder-'+Date.now(),JSON.stringify(state));
+  localStorage.setItem(KEY,JSON.stringify(next));Object.assign(state,next);return true;
+ }catch(e){return false}
+}
+function saveSchedulePreference(patch){
+ const next={...state,...patch};
+ try{localStorage.setItem(KEY,JSON.stringify(next));Object.assign(state,next);return true}catch(e){toast('未能保存，原设置未改变。请先导出备份。');return false}
+}
+function requestScheduleMove(id,to){
+ const rows=movedScheduleRows(orderedScheduleRows(todayTasks()),id,to);
+ if(!rows||rows.map(t=>t.id).join('|')===orderedScheduleRows(todayTasks()).map(t=>t.id).join('|'))return;
+ closeRowMoveMenu();
+ if(!state.syncScheduleDrag){
+  if(saveSchedulePreference({tableOrder:rows.map(t=>t.id)})){renderCard(true);focusScheduleGrip(id);toast('显示顺序已保存，实际时间和倒计时不变')}
+  return;
+ }
+ const proposal=scheduleMoveProposal(rows);
+ if(proposal.error){toast(proposal.error);return}
+ pendingScheduleMove={...proposal,movedId:id};goto('schedulepreview');
+ requestAnimationFrame(()=>document.querySelector('[data-action="apply-reorder"]')?.focus({preventScroll:true}));
+}
+function schedulePreviewCard(){
+ const p=pendingScheduleMove;if(!p)return '<div class="content">没有待保存的更改。</div>';
+ return `<div class="content">${info('更改尚未保存','预览新的时间安排','每项时长不变；保留原有空档，以原日程的第一个开始时间为起点重新排列。只有确认保存后才改变时间和倒计时。')}${p.warnings.length?`<div class="confirm preview-warning"><b>注意：你定好的睡眠或健身时间会改变</b>${p.warnings.map(x=>`<div>${safe(x)}</div>`).join('')}</div>`:''}<div class="button-row"><button class="primary" data-action="apply-reorder">确认保存日程</button><button class="secondary" data-action="cancel-reorder">取消，不改原日程</button></div><div class="blocktitle">${p.changes.length?'以下时段会调整':'实际时间不变，只保存显示顺序'}</div>${p.changes.map(x=>`<div class="schedule-change"><b>${safe(x.after.title)}</b>${x.before.start}–${x.before.end} → <strong>${x.after.start}–${x.after.end}</strong><small>时长仍为 ${hourDisplay(diff(x.after))}</small></div>`).join('')}<div class="notice">保存前会自动备份原日程。课程打卡、备注和已完成记录都保留。</div></div>`;
+}
 function scheduleCard(){
  let n=new Date(),{tasks,cur}=currentTimeline(n),completed=state.dailyChecks[dayKey(n)]||[];
+ tasks=orderedScheduleRows(tasks);
  let count=tasks.filter(t=>completed.includes(t.id)).length;
  let rows=tasks.map(t=>{
   let isNow=cur?.id===t.id,isDone=completed.includes(t.id),cat=timetableCategory(t);
-  return `<tr class="${isNow?'is-current':''} ${isDone?'is-checked':''}" data-task="${safe(t.id)}" tabindex="0" role="button" aria-label="查看 ${safe(t.start)} 至 ${safe(t.end)} ${safe(t.title)} 的学习内容">
+  return `<tr class="${isNow?'is-current':''} ${isDone?'is-checked':''}" data-task="${safe(t.id)}" tabindex="0" aria-label="查看 ${safe(t.start)} 至 ${safe(t.end)} ${safe(t.title)} 的学习内容">
     <td class="time">${safe(t.start)}</td><td class="time">${safe(t.end)}</td>
     <td class="arrange">${safe(t.title)}${isNow?'<span class="now-mark">· 现在</span>':isDone?'<span class="done-mark">✓</span>':''}</td>
     <td class="cat ${timetableCategoryClass(t)}">${cat}</td>
     <td class="subject">${safe(timetableSubject(t))}</td>
     <td class="hours">${hourDisplay(diff(t))}</td>
+    <td class="reorder-cell"><button type="button" class="row-grip" data-reorder="${safe(t.id)}" aria-label="调整 ${safe(t.title)} 的顺序" aria-haspopup="menu" title="上下拖动排序 · 点击打开上移/下移 · 方向键微调"><svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 5h12M3 9h12M3 13h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></td>
    </tr>`;
  }).join('');
  return {
-  head:header('每日学习时间表','每日计划 · 周一至周日',`<button class="action" data-action="planner">调整日程</button>`),
-  body:tasks.length?`<table class="timetable" aria-label="每日学习时间表"><colgroup><col class="col-time"><col class="col-time"><col class="col-arrange"><col class="col-category"><col class="col-subject"><col class="col-hours"></colgroup><thead><tr><th scope="col">开始时间</th><th scope="col">结束时间</th><th scope="col">安排</th><th scope="col">类别</th><th scope="col">科目</th><th scope="col">时长</th></tr></thead><tbody>${rows}</tbody></table>`:'<div class="timetable-empty">今天没有安排，点击右上角调整日程。</div>',
-  foot:`<span>每日固定 · 点击任意一行，在本卡片内查看学习内容</span><span style="margin-left:auto;white-space:nowrap">已完成 <strong>${count}/${tasks.length}</strong></span>`
+  head:header('每日学习时间表','每日计划 · 周一至周日',`<button class="action" data-action="planner">调整日程</button>`)+`<div class="schedule-controls"><button type="button" class="schedule-sync" role="switch" aria-checked="${state.syncScheduleDrag}" data-action="schedule-sync"><span class="switch-track" aria-hidden="true"></span>同步调整时间</button><span class="schedule-mode-hint">${state.syncScheduleDrag?'时长不变 · 松手预览':'只改显示顺序 · 时间不变'}</span>${state.tableOrder.length?'<button type="button" class="reset-display-order" data-action="reset-display-order">按时间排序</button>':''}</div>`,
+  body:tasks.length?`<table class="timetable" aria-label="每日学习时间表"><colgroup><col class="col-time"><col class="col-time"><col class="col-arrange"><col class="col-category"><col class="col-subject"><col class="col-hours"><col class="col-handle"></colgroup><thead><tr><th scope="col">开始时间</th><th scope="col">结束时间</th><th scope="col">安排</th><th scope="col">类别</th><th scope="col">科目</th><th scope="col">时长</th><th scope="col" aria-label="调整顺序"></th></tr></thead><tbody>${rows}</tbody></table>`:'<div class="timetable-empty">今天没有安排，点击右上角调整日程。</div>',
+  foot:`<span>${state.syncScheduleDrag?'拖动 ≡ 调整日程 · 保存前预览':'拖动 ≡ 只改显示顺序'}</span><span style="margin-left:auto;white-space:nowrap">已完成 <strong>${count}/${tasks.length}</strong></span>`
  };
 }
 function plannerCard(){let tasks=state.schedule.slice().sort((a,b)=>tod(a.start)-tod(b.start));return `<div class="content">${info('编辑计划','你的日常时间安排','修改的时间表会自动用于周一至周日；新增、删除、恢复都只在本卡片中完成。')}<div class="button-row"><button class="primary" data-action="add">＋ 新增时段</button><button class="secondary" data-action="backup">导出备份</button><button class="secondary" data-action="import">导入备份</button></div><div class="blocktitle">点击任意时段修改</div>${tasks.map(t=>`<button class="item" data-edit="${safe(t.id)}"><span class="number" style="font-size:11px;width:57px">${safe(t.start)}</span><span class="details"><b>${safe(t.title)}</b><small>${safe(t.start)}–${safe(t.end)} · ${safe(t.subject)}</small></span><span class="arrow">›</span></button>`).join('')}<div class="button-row"><button class="secondary danger" data-action="restore">恢复为新版推荐时间表</button></div></div>`}
@@ -568,7 +671,10 @@ function scrollScheduleToCurrent(sc,force=false){
  sc.scrollTo({top,behavior:(initial||force||reduced)?'auto':'smooth'});
 }
 function renderCard(keepScroll=false){let head='',body='',foot='';let sc=document.getElementById('panelbody');let prev=keepScroll?sc.scrollTop:0;let v=nav.view;
+ if(rowDrag&&v==='schedule')return;
+ if(rowMenuId!==null)closeRowMoveMenu();
  if(v==='schedule'){({head,body,foot}=scheduleCard())}
+ else if(v==='schedulepreview'){head=header('预览日程调整','SCHEDULE PREVIEW');body=schedulePreviewCard();foot='确认前不改变时间 · 保存前自动备份'}
  else if(v==='subject'){let isM=nav.subject==='mock',isMath=nav.subject==='math';head=header(isMath?'高数':isM?'模拟电子技术':'电路','LEARNING PATH',isMath?`${mathLessons.filter(x=>mathDone(x.id)).length}/56`:isM?`${state.checkedVideos.length}/69`:`${state.checkedCircuit.length}/6`);body=isMath?mathCard():isM?mockCard():circuitCard();foot=isMath?'暑期基础 → 秋季强化 · 本地手动打卡':isM?'69节视频 · 按老师圈选清单排序并分阶段学习':'学校考纲 · 6个知识模块'}
  else if(v==='mathstage'){head=header(mathStages[nav.stage].name,'MATH LESSONS');body=mathStageCard(nav.stage);foot='看课与练习完成后勾选 · 与增强版播放位置独立'}
  else if(v==='daily'){head=header('今日具体任务','TODAY STUDY');body=dailyCard();foot='每日课单固定 · 未完成不跳过 · 周日复习补欠'}
@@ -651,8 +757,17 @@ function refreshAll(keepScroll=false){
 }
 
 function exportBackup(){let b=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),...state},null,2)],{type:'application/json'});let url=URL.createObjectURL(b);let a=document.createElement('a');a.href=url;a.download='逐日学习进度备份_'+dayKey()+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('学习计划已导出')}
-document.getElementById('importFile').addEventListener('change',async e=>{let file=e.target.files?.[0];if(!file)return;try{let obj=JSON.parse(await file.text());if(!obj||!Array.isArray(obj.schedule)||!Array.isArray(obj.checkedVideos))throw Error('无效备份');const next={...state,scheduleRevision:SCHEDULE_REVISION,dailyPlans:obj.dailyPlans||{}};for(let key of ['checkedVideos','checkedMath','checkedCircuit','dailyChecks','videoTitles','schedule','taskNotes','blankPercent','bottomInset','scheduleArchive'])if(obj[key]!==undefined)next[key]=clone(obj[key]);localStorage.setItem(KEY+'-before-import-'+Date.now(),JSON.stringify(state));localStorage.setItem(KEY,JSON.stringify(next));Object.assign(state,next);home();refreshAll();applyBlankWidth(state.blankPercent);applyBottomInset(state.bottomInset);toast('备份导入完成，导入前记录已另存')}catch(err){toast('导入失败：备份无效或存储不足，原记录未替换')}e.target.value=''});
+document.getElementById('importFile').addEventListener('change',async e=>{let file=e.target.files?.[0];if(!file)return;try{let obj=JSON.parse(await file.text());if(!obj||!Array.isArray(obj.schedule)||!Array.isArray(obj.checkedVideos))throw Error('无效备份');const next={...state,scheduleRevision:SCHEDULE_REVISION,dailyPlans:obj.dailyPlans||{}};for(let key of ['checkedVideos','checkedMath','checkedCircuit','dailyChecks','videoTitles','schedule','taskNotes','blankPercent','bottomInset','scheduleArchive'])if(obj[key]!==undefined)next[key]=clone(obj[key]);if(typeof obj.syncScheduleDrag==='boolean')next.syncScheduleDrag=obj.syncScheduleDrag;if(Array.isArray(obj.tableOrder))next.tableOrder=obj.tableOrder.filter(id=>typeof id==='string');localStorage.setItem(KEY+'-before-import-'+Date.now(),JSON.stringify(state));localStorage.setItem(KEY,JSON.stringify(next));Object.assign(state,next);home();refreshAll();applyBlankWidth(state.blankPercent);applyBottomInset(state.bottomInset);toast('备份导入完成，导入前记录已另存')}catch(err){toast('导入失败：备份无效或存储不足，原记录未替换')}e.target.value=''});
 document.getElementById('desk').addEventListener('click',e=>{let b=e.target.closest('button, tr[data-task]');if(!b)return;
+ if(e.target.closest('.row-grip'))return;
+ if(b.dataset.action==='schedule-sync'){if(saveSchedulePreference({syncScheduleDrag:!state.syncScheduleDrag})){renderCard(true);document.querySelector('.schedule-sync')?.focus({preventScroll:true})}return}
+ if(b.dataset.action==='reset-display-order'){if(saveSchedulePreference({tableOrder:[]})){renderCard(true);toast('已恢复按时间排序，实际日程不变')}return}
+ if(b.dataset.action==='cancel-reorder'){home();return}
+ if(b.dataset.action==='apply-reorder'){
+  const id=pendingScheduleMove?.movedId;
+  if(saveScheduleProposal(pendingScheduleMove)){home();refreshAll(true);focusScheduleGrip(id);toast('新日程已保存，原日程已备份，学习记录保留')}
+  else toast('未能保存，或日程已经变化；原日程未修改，请取消后重试。');return;
+ }
  if(b.dataset.action){let a=b.dataset.action;if(a==='back')return back();if(a==='planner')return goto('planner');if(a==='add')return goto('edit',{editing:null});if(a==='restore')return goto('confirm',{confirm:'restore'});if(a==='delete')return goto('confirm',{confirm:'delete',editing:nav.editing});if(a==='backup')return exportBackup();if(a==='import')return document.getElementById('importFile').click();if(a==='confirm'){if(nav.confirm==='restore')state.schedule=clone(defaultSchedule);else state.schedule=state.schedule.filter(t=>t.id!==nav.editing);save();home();refreshAll();toast('日程已更新');return}}
  if(b.dataset.subject){return goto('subject',{subject:b.dataset.subject})}
  if(b.dataset.action==='daily'){return goto('daily')}
@@ -667,6 +782,7 @@ document.getElementById('desk').addEventListener('click',e=>{let b=e.target.clos
  if(b.dataset.edit){return goto('edit',{editing:b.dataset.edit})}
  });
 document.getElementById('desk').addEventListener('keydown',e=>{
+ if(e.target.closest('.row-grip'))return;
  const row=e.target.closest('tr[data-task]');
  if(row&&(e.key==='Enter'||e.key===' ')){e.preventDefault();row.click()}
 });
@@ -835,4 +951,104 @@ window.addEventListener('resize',alignSchedulePanel);
 window.addEventListener('load',alignSchedulePanel);
 alignSchedulePanel();
 requestAnimationFrame(alignSchedulePanel);
+// The handle owns pointer/keyboard events; clicking a row still opens its course.
+function closeRowMoveMenu(){
+ document.getElementById('row-move-menu').hidden=true;
+ document.querySelectorAll('.row-grip[aria-expanded]').forEach(b=>b.setAttribute('aria-expanded','false'));
+ rowMenuId=null;
+}
+function focusScheduleGrip(id){
+ const sc=document.getElementById('panelbody');
+ const grip=Array.from(sc.querySelectorAll('.row-grip')).find(b=>b.dataset.reorder===id);
+ if(!grip)return;
+ grip.focus({preventScroll:true});
+ const rect=sc.getBoundingClientRect(),row=grip.closest('tr').getBoundingClientRect();
+ const top=rect.top+(sc.querySelector('thead')?.getBoundingClientRect().height||0);
+ if(row.top<top)sc.scrollTop+=row.top-top;
+ else if(row.bottom>rect.bottom)sc.scrollTop+=row.bottom-rect.bottom;
+}
+function openRowMoveMenu(grip){
+ const id=grip.dataset.reorder;
+ if(rowMenuId===id){closeRowMoveMenu();return}
+ closeRowMoveMenu();rowMenuId=id;
+ const menu=document.getElementById('row-move-menu'),rows=orderedScheduleRows(todayTasks()),i=rows.findIndex(t=>t.id===id);
+ menu.querySelector('[data-move-direction="-1"]').disabled=i<=0;
+ menu.querySelector('[data-move-direction="1"]').disabled=i<0||i>=rows.length-1;
+ menu.hidden=false;grip.setAttribute('aria-expanded','true');
+ const r=grip.getBoundingClientRect();
+ menu.style.left=Math.max(8,Math.min(r.right-menu.offsetWidth,window.innerWidth-menu.offsetWidth-8))+'px';
+ menu.style.top=Math.max(8,Math.min(r.bottom+4,window.innerHeight-menu.offsetHeight-8))+'px';
+ menu.querySelector('button:not(:disabled)')?.focus({preventScroll:true});
+}
+const reorderBody=document.getElementById('panelbody');
+let rowDragFrame=0;
+function updateRowDrop(){
+ if(!rowDrag?.moved)return;
+ const rows=Array.from(reorderBody.querySelectorAll('tbody tr[data-task]'));
+ rows.forEach(r=>r.classList.remove('drop-before','drop-after','row-dragging'));
+ const source=rows.find(r=>r.dataset.task===rowDrag.id);source?.classList.add('row-dragging');
+ const others=rows.filter(r=>r!==source);
+ const before=others.findIndex(r=>{const box=r.getBoundingClientRect();return rowDrag.clientY<box.top+box.height/2});
+ rowDrag.to=before<0?others.length:before;
+ if(before<0)others[others.length-1]?.classList.add('drop-after');else others[before]?.classList.add('drop-before');
+}
+function rowDragTick(){
+ if(!rowDrag?.moved)return;
+ const rect=reorderBody.getBoundingClientRect();
+ const top=rect.top+(reorderBody.querySelector('thead')?.getBoundingClientRect().height||0);
+ if(rowDrag.clientY<top+24)reorderBody.scrollTop-=7;
+ else if(rowDrag.clientY>rect.bottom-24)reorderBody.scrollTop+=7;
+ updateRowDrop();rowDragFrame=requestAnimationFrame(rowDragTick);
+}
+function finishRowDrag(cancel=false){
+ if(!rowDrag)return;
+ const drag=rowDrag;rowDrag=null;cancelAnimationFrame(rowDragFrame);
+ reorderBody.querySelectorAll('tbody tr').forEach(r=>r.classList.remove('drop-before','drop-after','row-dragging'));
+ if(drag.handle.hasPointerCapture(drag.pointerId))drag.handle.releasePointerCapture(drag.pointerId);
+ if(drag.moved){ignoreRowGripClickUntil=Date.now()+400;if(!cancel)requestScheduleMove(drag.id,drag.to)}
+}
+reorderBody.addEventListener('pointerdown',e=>{
+ const grip=e.target.closest('.row-grip');if(!grip||e.button!==0||rowDrag)return;
+ e.preventDefault();closeRowMoveMenu();grip.focus({preventScroll:true});
+ rowDrag={id:grip.dataset.reorder,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,clientY:e.clientY,moved:false,to:orderedScheduleRows(todayTasks()).findIndex(t=>t.id===grip.dataset.reorder),handle:grip};
+ grip.setPointerCapture(e.pointerId);
+});
+reorderBody.addEventListener('pointermove',e=>{
+ if(!rowDrag||e.pointerId!==rowDrag.pointerId)return;
+ rowDrag.clientY=e.clientY;
+ if(!rowDrag.moved&&Math.hypot(e.clientX-rowDrag.startX,e.clientY-rowDrag.startY)>4){rowDrag.moved=true;rowDragTick()}
+ if(rowDrag.moved){e.preventDefault();updateRowDrop()}
+});
+reorderBody.addEventListener('pointerup',e=>{if(rowDrag?.pointerId===e.pointerId)finishRowDrag()});
+reorderBody.addEventListener('pointercancel',e=>{if(rowDrag?.pointerId===e.pointerId)finishRowDrag(true)});
+reorderBody.addEventListener('lostpointercapture',e=>{if(rowDrag?.pointerId===e.pointerId)finishRowDrag(true)});
+reorderBody.addEventListener('click',e=>{
+ const grip=e.target.closest('.row-grip');if(!grip)return;
+ e.stopPropagation();if(Date.now()>=ignoreRowGripClickUntil)openRowMoveMenu(grip);
+});
+reorderBody.addEventListener('keydown',e=>{
+ const grip=e.target.closest('.row-grip');if(!grip)return;
+ const rows=orderedScheduleRows(todayTasks()),from=rows.findIndex(t=>t.id===grip.dataset.reorder);
+ const targets={ArrowUp:from-1,ArrowDown:from+1,Home:0,End:rows.length-1};
+ if(e.key in targets){e.preventDefault();e.stopPropagation();requestScheduleMove(grip.dataset.reorder,targets[e.key])}
+});
+const rowMoveMenu=document.getElementById('row-move-menu');
+rowMoveMenu.addEventListener('click',e=>{
+ const button=e.target.closest('[data-move-direction]');if(!button||button.disabled||rowMenuId===null)return;
+ const id=rowMenuId,from=orderedScheduleRows(todayTasks()).findIndex(t=>t.id===id);
+ requestScheduleMove(id,from+Number(button.dataset.moveDirection));
+});
+rowMoveMenu.addEventListener('keydown',e=>{
+ if(!['ArrowUp','ArrowDown','Home','End'].includes(e.key))return;
+ e.preventDefault();const buttons=Array.from(rowMoveMenu.querySelectorAll('button:not(:disabled)'));
+ const i=buttons.indexOf(document.activeElement),next=e.key==='Home'?0:e.key==='End'?buttons.length-1:(i+(e.key==='ArrowUp'?-1:1)+buttons.length)%buttons.length;
+ buttons[next]?.focus({preventScroll:true});
+});
+document.addEventListener('pointerdown',e=>{if(rowMenuId!==null&&!e.target.closest('#row-move-menu,.row-grip'))closeRowMoveMenu()});
+document.addEventListener('keydown',e=>{
+ if(e.key!=='Escape')return;
+ if(rowDrag){e.preventDefault();finishRowDrag(true)}
+ if(rowMenuId!==null){const id=rowMenuId;closeRowMoveMenu();focusScheduleGrip(id)}
+ if(nav.view==='schedulepreview'){e.preventDefault();home()}
+});
 </script></body></html>
