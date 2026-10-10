@@ -475,7 +475,7 @@ state.tableOrder=Array.isArray(stored.tableOrder)?stored.tableOrder.filter(id=>t
 state.soundReminder=stored.soundReminder===true;
 function normalizeSoundVolume(value){const n=typeof value==='number'||typeof value==='string'&&value.trim()!==''?Number(value):NaN;return Number.isFinite(n)?Math.round(Math.max(0,Math.min(100,n))):60}
 state.soundVolume=normalizeSoundVolume(stored.soundVolume);
-let rowDrag=null,pendingScheduleMove=null,rowMenuId=null,ignoreRowGripClickUntil=0;
+let rowDrag=null,pendingScheduleMove=null,rowMenuId=null,pendingRowDragClick=null;
 let migrationFailed=false;
 function migrateSchedule(){
  if(state.scheduleRevision===SCHEDULE_REVISION)return;
@@ -1113,12 +1113,26 @@ function rowDragTick(){
  else if(rowDrag.clientY>rect.bottom-24)reorderBody.scrollTop+=7;
  updateRowDrop();rowDragFrame=requestAnimationFrame(rowDragTick);
 }
+// Re-rendering or releasing capture can retarget the release click to a row,
+// ancestor, or preview button. Catch it before any navigation/save handler.
+function suppressRowDragClick(e){
+ const pending=pendingRowDragClick;
+ if(!pending)return;
+ if(Date.now()>pending.until){pendingRowDragClick=null;return}
+ if(e.detail===0)return; // Keyboard and accessibility activation stay usable.
+ if(e.pointerId>0&&e.pointerId!==pending.pointerId)return;
+ pendingRowDragClick=null;e.preventDefault();e.stopImmediatePropagation();
+}
+function resetRowDragClick(){pendingRowDragClick=null}
+document.addEventListener('pointerdown',resetRowDragClick,true);
+document.addEventListener('click',suppressRowDragClick,true);
 function finishRowDrag(cancel=false){
  if(!rowDrag)return;
  const drag=rowDrag;rowDrag=null;cancelAnimationFrame(rowDragFrame);
  reorderBody.querySelectorAll('tbody tr').forEach(r=>r.classList.remove('drop-before','drop-after','row-dragging'));
+ if(drag.moved)pendingRowDragClick={pointerId:drag.pointerId,until:Date.now()+1000};
  if(drag.handle.hasPointerCapture(drag.pointerId))drag.handle.releasePointerCapture(drag.pointerId);
- if(drag.moved){ignoreRowGripClickUntil=Date.now()+400;if(!cancel)requestScheduleMove(drag.id,drag.to)}
+ if(drag.moved&&!cancel)requestScheduleMove(drag.id,drag.to);
 }
 reorderBody.addEventListener('pointerdown',e=>{
  const grip=e.target.closest('.row-grip');if(!grip||e.button!==0||rowDrag)return;
@@ -1137,7 +1151,7 @@ reorderBody.addEventListener('pointercancel',e=>{if(rowDrag?.pointerId===e.point
 reorderBody.addEventListener('lostpointercapture',e=>{if(rowDrag?.pointerId===e.pointerId)finishRowDrag(true)});
 reorderBody.addEventListener('click',e=>{
  const grip=e.target.closest('.row-grip');if(!grip)return;
- e.stopPropagation();if(Date.now()>=ignoreRowGripClickUntil)openRowMoveMenu(grip);
+ e.stopPropagation();openRowMoveMenu(grip);
 });
 reorderBody.addEventListener('keydown',e=>{
  const grip=e.target.closest('.row-grip');if(!grip)return;

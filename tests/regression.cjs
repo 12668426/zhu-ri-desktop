@@ -174,6 +174,41 @@ assert.ok(overlap.scheduleMoveProposal(overlap.todayTasks()).error);
 const weekday=new Date().getDay(),mixed=custom([{id:'a',start:'10:00',end:'11:00',days},{id:'b',start:'11:00',end:'12:00',days:[weekday]}]);
 assert.ok(mixed.scheduleMoveProposal(mixed.todayTasks()).error);
 console.log('PASS: both reorder modes, unchanged countdown in display-only mode, preview isolation, fixed durations, complete-day coverage, gym warning, automatic backup, record preservation, reload persistence, stale preview and failed storage protection, gaps, midnight and invalid schedules');
+function testRowDragReleaseClick(){
+ const listeners={};let now=1000,moves=0,activations=0,onRelease=()=>{},onReorder=()=>{};
+ const document={addEventListener(type,callback,capture){listeners[type]={callback,capture}}};
+ const handle={hasPointerCapture:()=>true,releasePointerCapture(){onRelease()}};
+ const ctx=vm.createContext({Date:{now:()=>now},document,cancelAnimationFrame(){},
+  reorderBody:{querySelectorAll:()=>[{classList:{remove(){}}}]},
+  requestScheduleMove(){moves++;onReorder()},handle});
+ const source=script.slice(script.indexOf('function suppressRowDragClick('),script.indexOf("reorderBody.addEventListener('pointerdown'"));
+ vm.runInContext('let rowDrag=null,rowDragFrame=0,pendingRowDragClick=null;'+source,ctx);
+ assert.equal(listeners.click.capture,true);assert.equal(listeners.pointerdown.capture,true);
+ const click=(target='row',detail=1,pointerId=7)=>{
+  const e={target,detail,pointerId,prevented:false,stopped:false,preventDefault(){this.prevented=true},stopImmediatePropagation(){this.stopped=true}};
+  if(pointerId===null)delete e.pointerId;
+  listeners.click.callback(e);if(!e.stopped)activations++;return e;
+ };
+ const finish=(moved=true,cancel=false)=>vm.runInContext(`rowDrag={moved:${moved},pointerId:7,id:'math',to:5,handle};finishRowDrag(${cancel});`,ctx);
+ for(const target of ['grip','row','panel ancestor','new preview save button']){
+  finish();const e=click(target);assert.equal(e.stopped,true);assert.equal(e.prevented,true);
+ }
+ assert.equal(activations,0);assert.equal(moves,4);
+ onRelease=()=>assert.equal(click('retargeted during capture release').stopped,true);
+ finish();onRelease=()=>{}; // Must arm BEFORE releasing pointer capture.
+ onReorder=()=>assert.equal(click('retargeted during re-render').stopped,true);
+ finish();onReorder=()=>{}; // Must arm BEFORE replacing the table with a preview.
+ finish();assert.equal(click('keyboard row',0).stopped,false);assert.equal(click().stopped,true);
+ finish();assert.equal(click('another pointer',1,8).stopped,false);assert.equal(click().stopped,true);
+ finish();assert.equal(click('Safari legacy mouse event',1,null).stopped,true);
+ finish();listeners.pointerdown.callback();assert.equal(click('intentional next click').stopped,false);
+ finish();assert.equal(click().stopped,true);assert.equal(click('later click').stopped,false);
+ const beforeCancel=moves;finish(true,true);assert.equal(moves,beforeCancel);assert.equal(click().stopped,true);
+ finish(false);assert.equal(moves,beforeCancel);assert.equal(click('stationary handle tap').stopped,false);
+ finish();now+=1001;assert.equal(click('expired guard').stopped,false);
+ console.log('PASS: release clicks suppressed at document capture on grip/row/ancestor/new preview, armed before capture release and re-render, both drag modes protected, keyboard and next deliberate click preserved, pointer identity, one-shot expiry, cancellation and stationary taps');
+}
+testRowDragReleaseClick();
 const soundBoot=boot({[KEY]:JSON.stringify(fixture)});
 assert.equal(soundBoot.state.soundReminder,false);
 assert.equal(soundBoot.state.soundVolume,60);
