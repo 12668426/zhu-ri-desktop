@@ -315,17 +315,22 @@
 .preview-warning{margin-bottom:12px}
 @media(max-width:1250px){.timetable col.col-arrange{width:calc(29% - 32px)}}
 .currentcard-top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:28px;flex-shrink:0}
-.sound-controls{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.currentcard-top .active-line{flex-shrink:0;white-space:nowrap}
+.sound-controls{display:flex;align-items:center;gap:4px;flex:0 1 174px;min-width:118px}
 .sound-toggle,.sound-activate{display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:2px 3px;border:0;border-radius:6px;background:transparent;color:#f1fff8;font-size:11px;white-space:nowrap}
 .sound-toggle:hover,.sound-activate:hover{background:#ffffff19}
 .sound-toggle:focus-visible,.sound-activate:focus-visible{outline:2px solid #effff8;outline-offset:2px}
-.sound-toggle svg{width:14px;height:14px}
+.sound-toggle{flex:none;width:36px;justify-content:center}
+.sound-activate{position:relative;flex:none;width:24px;justify-content:center}
+.sound-activate svg{width:16px;height:16px}
+.sound-activate:after{content:"";position:absolute;bottom:2px;left:5px;right:5px;border-bottom:1px solid currentColor}
+.sound-volume{flex:1;min-width:26px;width:64px;height:24px;margin:0;accent-color:#d7fff1;cursor:pointer}
+.sound-volume:focus-visible{outline:2px solid #effff8;outline-offset:2px;border-radius:4px}
+.sound-volume-value{flex:none;width:28px;text-align:right;font-size:10px;color:#f1fff8;font-variant-numeric:tabular-nums}
 .sound-toggle .switch-track{background:#426e72;border:1px solid #c6e3dd;box-sizing:content-box;width:28px;height:16px}
 .sound-toggle .switch-track:after{width:12px;height:12px}
 .sound-toggle[aria-checked=true] .switch-track{background:#17614f}
 .sound-toggle[aria-checked=true] .switch-track:after{transform:translateX(12px)}
-.sound-activate{text-decoration:underline;text-underline-offset:3px}
-.sound-activate[hidden]{display:none}
 .sound-activate:disabled{opacity:.6;cursor:wait}
 @container overview (max-height:440px){.currentcard-top{min-height:24px}.sound-toggle,.sound-activate{min-height:24px}.currentcard-top .eyebrow{letter-spacing:0}}
 @media(prefers-color-scheme:dark){
@@ -340,7 +345,7 @@
 <body><main id="desk"><div class="workspace"><header class="topbar"><div class="brand"><span class="brand-icon" aria-hidden="true"><svg class="brand-symbol" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" focusable="false"><circle cx="29.5" cy="16.5" r="8" fill="#F6BF7B"/><path d="M8.5 29.2H39.5" stroke="#ECFFF6" stroke-width="3.3" stroke-linecap="round"/><path d="M9 38.2C15.5 37.2 21 33.6 26.8 33.6H38.5" fill="none" stroke="#A9E1D1" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><h1>逐日</h1><p>STUDY DESK · 2026</p></div></div><div id="topdate" class="topdate">周一至周日 · 每日学习</div></header>
 <div class="grid"><section class="overview" aria-label="学习状态"><div class="clockbox"><div id="hello" class="hello">今天，也在朝目标前进</div><div class="clock"><span id="clock">00:00</span><small id="seconds">00</small></div><div class="clockhint" id="daytext">正在读取时间</div></div>
 <div class="currentcard" id="currentcard" data-urgency="normal">
-  <div class="currentcard-top"><div class="eyebrow active-line"><span class="signal"></span><span id="status">正在进行</span></div><div class="sound-controls"><button id="sound-toggle" type="button" class="sound-toggle" role="switch" aria-checked="false" aria-label="音效提醒：时段结束时响一声" title="打开后每个时段结束时响一声；需网页保持运行、电脑未静音"><svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 7h3l4-3v10l-4-3H3V7Zm10-1a5 5 0 0 1 0 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>音效提醒</span><span class="switch-track" aria-hidden="true"></span></button><button id="sound-activate" type="button" class="sound-activate" aria-label="试听并启用提示音" hidden>启用</button></div></div>
+  <div class="currentcard-top"><div class="eyebrow active-line"><span class="signal"></span><span id="status">正在进行</span></div><div class="sound-controls"><button id="sound-activate" type="button" class="sound-activate" aria-label="试听提示音" title="点击喇叭试听提示音" data-audio-state="pending"><svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 7h3l4-3v10l-4-3H3V7Zm10-1a5 5 0 0 1 0 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><input id="sound-volume" class="sound-volume" type="range" min="0" max="100" step="1" value="60" aria-label="提示音音量" title="调节提示音音量"><output id="sound-volume-value" class="sound-volume-value" for="sound-volume">60%</output><button id="sound-toggle" type="button" class="sound-toggle" role="switch" aria-checked="false" aria-label="音效提醒：时段结束时响一声" title="打开后每个时段结束时响一声；需网页保持运行、电脑未静音"><span class="switch-track" aria-hidden="true"></span></button></div></div>
   <div class="taskname" id="taskname">正在读取计划</div>
   <div class="tasktime" id="tasktime"></div>
   <div class="timerrow" aria-label="当前时段倒计时">
@@ -462,6 +467,8 @@ const state={...stored,checkedVideos:Array.isArray(stored.checkedVideos)?stored.
 state.syncScheduleDrag=stored.syncScheduleDrag!==false;
 state.tableOrder=Array.isArray(stored.tableOrder)?stored.tableOrder.filter(id=>typeof id==='string'):[];
 state.soundReminder=stored.soundReminder===true;
+function normalizeSoundVolume(value){const n=typeof value==='number'||typeof value==='string'&&value.trim()!==''?Number(value):NaN;return Number.isFinite(n)?Math.round(Math.max(0,Math.min(100,n))):60}
+state.soundVolume=normalizeSoundVolume(stored.soundVolume);
 let rowDrag=null,pendingScheduleMove=null,rowMenuId=null,ignoreRowGripClickUntil=0;
 let migrationFailed=false;
 function migrateSchedule(){
@@ -778,31 +785,38 @@ const reminderVoices=new Set();
 function renderSoundControls(){
  const toggle=document.getElementById('sound-toggle'),activate=document.getElementById('sound-activate');
  toggle.setAttribute('aria-checked',String(state.soundReminder));
- activate.hidden=!state.soundReminder;activate.disabled=audioStarting;
- activate.textContent=audioStarting?'启用中':reminderAudio?.state==='running'?'试听':'启用';
- activate.title=reminderAudio?.state==='running'?'试听时段结束提示音':'刷新或声音被暂停后，点击一次启用声音';
+ activate.disabled=audioStarting;
+ activate.setAttribute('aria-busy',String(audioStarting));
+ activate.dataset.audioState=reminderAudio?.state==='running'?'ready':'pending';
+ activate.title=audioStarting?'正在启用声音':reminderAudio?.state==='running'?'点击喇叭试听提示音':'点击喇叭试听；提醒已打开时，也会启用声音';
+ const range=document.getElementById('sound-volume'),volume=normalizeSoundVolume(state.soundVolume);
+ range.value=String(volume);range.setAttribute('aria-valuetext',volume+'%');
+ const valueLabel=document.getElementById('sound-volume-value');
+ if(valueLabel.textContent!==volume+'%')valueLabel.textContent=volume+'%';
 }
 function stopReminderChime(){
  for(const voice of reminderVoices){try{voice.osc.stop()}catch(e){}voice.osc.disconnect();voice.gain.disconnect()}
  reminderVoices.clear();
 }
-function playReminderChime(){
- if(!state.soundReminder||reminderAudio?.state!=='running')return false;
+function playReminderChime(preview=false){
+ if((!preview&&!state.soundReminder)||reminderAudio?.state!=='running')return false;
  const ctx=reminderAudio,start=ctx.currentTime;
  try{
   stopReminderChime();
+  const peak=.5*Math.pow(normalizeSoundVolume(state.soundVolume)/100,1.5);
+  if(peak===0)return true;
   [660,880].forEach((frequency,i)=>{
    const osc=ctx.createOscillator(),gain=ctx.createGain(),at=start+i*.22;
    const voice={osc,gain};reminderVoices.add(voice);
    osc.type='sine';osc.frequency.setValueAtTime(frequency,at);
-   gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(.12,at+.025);gain.gain.exponentialRampToValueAtTime(.001,at+.48);
+   gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(peak,at+.025);gain.gain.exponentialRampToValueAtTime(.0001,at+.48);
    osc.connect(gain);gain.connect(ctx.destination);
    osc.addEventListener('ended',()=>{osc.disconnect();gain.disconnect();reminderVoices.delete(voice)},{once:true});
    osc.start(at);osc.stop(at+.5);
   });return true;
  }catch(e){stopReminderChime();return false}
 }
-async function activateReminderAudio(){
+async function activateReminderAudio(preview=false){
  const action=++audioAction;let timeout;
  audioStarting=true;renderSoundControls();
  try{
@@ -814,10 +828,10 @@ async function activateReminderAudio(){
   }
   const ctx=reminderAudio;
   if(ctx.state!=='running')await Promise.race([ctx.resume(),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('blocked')),2000)})]);
-  if(action!==audioAction||!state.soundReminder)return;
-  if(ctx.state!=='running'||!playReminderChime())throw Error('blocked');
-  toast('音效提醒已启用：每个时段结束时响一声');
- }catch(e){if(action===audioAction&&state.soundReminder)toast('暂未启用声音，请在 Plash 浏览模式点击“启用”，并检查是否静音。')}
+  if(action!==audioAction||(!preview&&!state.soundReminder))return;
+  if(ctx.state!=='running'||!playReminderChime(preview))throw Error('blocked');
+  toast(preview?`提示音试听 · 音量 ${state.soundVolume}%`:'音效提醒已启用：每个时段结束时响一声');
+ }catch(e){if(action===audioAction&&(preview||state.soundReminder))toast('暂未启用声音，请在 Plash 浏览模式点击喇叭，并检查是否静音。')}
  finally{clearTimeout(timeout);if(action===audioAction){audioStarting=false;renderSoundControls()}}
 }
 document.getElementById('sound-toggle').addEventListener('click',()=>{
@@ -826,7 +840,11 @@ document.getElementById('sound-toggle').addEventListener('click',()=>{
  reminderClock.reset();audioAction++;audioStarting=false;
  if(enabled)activateReminderAudio();else{stopReminderChime();renderSoundControls();toast('音效提醒已关闭')}
 });
-document.getElementById('sound-activate').addEventListener('click',()=>{if(state.soundReminder)activateReminderAudio()});
+document.getElementById('sound-activate').addEventListener('click',()=>activateReminderAudio(true));
+document.getElementById('sound-volume').addEventListener('input',e=>{
+ if(saveSchedulePreference({soundVolume:normalizeSoundVolume(e.target.value)})&&state.soundVolume===0)stopReminderChime();
+ renderSoundControls();
+});
 function refreshAll(keepScroll=false){
  const n=new Date();
  document.getElementById('clock').textContent=pad(n.getHours())+':'+pad(n.getMinutes());
@@ -845,7 +863,7 @@ function refreshAll(keepScroll=false){
 }
 
 function exportBackup(){let b=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),...state},null,2)],{type:'application/json'});let url=URL.createObjectURL(b);let a=document.createElement('a');a.href=url;a.download='逐日学习进度备份_'+dayKey()+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('学习计划已导出')}
-document.getElementById('importFile').addEventListener('change',async e=>{let file=e.target.files?.[0];if(!file)return;try{let obj=JSON.parse(await file.text());if(!obj||!Array.isArray(obj.schedule)||!Array.isArray(obj.checkedVideos))throw Error('无效备份');const next={...state,scheduleRevision:SCHEDULE_REVISION,dailyPlans:obj.dailyPlans||{}};for(let key of ['checkedVideos','checkedMath','checkedCircuit','dailyChecks','videoTitles','schedule','taskNotes','blankPercent','bottomInset','scheduleArchive'])if(obj[key]!==undefined)next[key]=clone(obj[key]);if(typeof obj.syncScheduleDrag==='boolean')next.syncScheduleDrag=obj.syncScheduleDrag;if(typeof obj.soundReminder==='boolean')next.soundReminder=obj.soundReminder;if(Array.isArray(obj.tableOrder))next.tableOrder=obj.tableOrder.filter(id=>typeof id==='string');localStorage.setItem(KEY+'-before-import-'+Date.now(),JSON.stringify(state));localStorage.setItem(KEY,JSON.stringify(next));Object.assign(state,next);reminderClock.reset();audioAction++;audioStarting=false;stopReminderChime();home();refreshAll();applyBlankWidth(state.blankPercent);applyBottomInset(state.bottomInset);toast('备份导入完成，导入前记录已另存')}catch(err){toast('导入失败：备份无效或存储不足，原记录未替换')}e.target.value=''});
+document.getElementById('importFile').addEventListener('change',async e=>{let file=e.target.files?.[0];if(!file)return;try{let obj=JSON.parse(await file.text());if(!obj||!Array.isArray(obj.schedule)||!Array.isArray(obj.checkedVideos))throw Error('无效备份');const next={...state,scheduleRevision:SCHEDULE_REVISION,dailyPlans:obj.dailyPlans||{}};for(let key of ['checkedVideos','checkedMath','checkedCircuit','dailyChecks','videoTitles','schedule','taskNotes','blankPercent','bottomInset','scheduleArchive'])if(obj[key]!==undefined)next[key]=clone(obj[key]);if(typeof obj.syncScheduleDrag==='boolean')next.syncScheduleDrag=obj.syncScheduleDrag;if(typeof obj.soundReminder==='boolean')next.soundReminder=obj.soundReminder;if(obj.soundVolume!==undefined)next.soundVolume=normalizeSoundVolume(obj.soundVolume);if(Array.isArray(obj.tableOrder))next.tableOrder=obj.tableOrder.filter(id=>typeof id==='string');localStorage.setItem(KEY+'-before-import-'+Date.now(),JSON.stringify(state));localStorage.setItem(KEY,JSON.stringify(next));Object.assign(state,next);reminderClock.reset();audioAction++;audioStarting=false;stopReminderChime();home();refreshAll();applyBlankWidth(state.blankPercent);applyBottomInset(state.bottomInset);toast('备份导入完成，导入前记录已另存')}catch(err){toast('导入失败：备份无效或存储不足，原记录未替换')}e.target.value=''});
 document.getElementById('desk').addEventListener('click',e=>{let b=e.target.closest('button, tr[data-task]');if(!b)return;
  if(e.target.closest('.row-grip'))return;
  if(b.dataset.action==='schedule-sync'){if(saveSchedulePreference({syncScheduleDrag:!state.syncScheduleDrag})){renderCard(true);document.querySelector('.schedule-sync')?.focus({preventScroll:true})}return}

@@ -176,6 +176,12 @@ assert.ok(mixed.scheduleMoveProposal(mixed.todayTasks()).error);
 console.log('PASS: both reorder modes, unchanged countdown in display-only mode, preview isolation, fixed durations, complete-day coverage, gym warning, automatic backup, record preservation, reload persistence, stale preview and failed storage protection, gaps, midnight and invalid schedules');
 const soundBoot=boot({[KEY]:JSON.stringify(fixture)});
 assert.equal(soundBoot.state.soundReminder,false);
+assert.equal(soundBoot.state.soundVolume,60);
+for(const [value,expected] of [[0,0],[100,100],[-5,0],[150,100],[26.7,27],[null,60],['bad',60],['',60]])assert.equal(boot({[KEY]:JSON.stringify({...fixture,soundVolume:value})}).state.soundVolume,expected);
+const soundMarkup=html.split('<div class="sound-controls">')[1].split('</div>')[0];
+assert.ok(!soundMarkup.includes('<span>音效提醒</span>'));
+assert.ok(!soundMarkup.includes('>试听<'));assert.ok(soundMarkup.includes('aria-label="试听提示音"'));
+assert.ok(html.includes('.sound-activate:after'));
 const midnight=new Date(2026,9,11,0,0).getTime();
 const end=soundBoot.segmentClock(new Date(midnight-1000));assert.equal(end.endsAt,midnight);
 const segment={id:end.cur.id,title:end.cur.title,endsAt:end.endsAt},nextSegment={id:'next',endsAt:midnight+3600000};
@@ -195,35 +201,48 @@ const repeated=soundBoot.createEndReminder();repeated.tick(new Date(midnight-100
 assert.equal(repeated.tick(new Date(midnight+1000),segment,'original',true),null);
 console.log('PASS: sound defaults off, exact midnight boundary, one alert at segment transition or gap, no repeat, no reload/sleep/clock-edit/schedule-edit catch-up');
 async function testReminderAudio(){
- const audioDb={[KEY]:JSON.stringify({...fixture,soundReminder:true})},audioNodes={},oscillators=[];let created=0;
- const audioNode=id=>audioNodes[id]??={attrs:{},style:{},listeners:{},classList:{add(){},remove(){}},setAttribute(k,v){this.attrs[k]=v},addEventListener(k,f){this.listeners[k]=f}};
+ const audioDb={[KEY]:JSON.stringify({...fixture,soundReminder:true})},audioNodes={},oscillators=[],gains=[];let created=0,storageFull=false;
+ const audioNode=id=>audioNodes[id]??={attrs:{},style:{},dataset:{},listeners:{},classList:{add(){},remove(){}},setAttribute(k,v){this.attrs[k]=v},addEventListener(k,f){this.listeners[k]=f}};
  const param=()=>({calls:[],setValueAtTime(v,t){this.calls.push([v,t])},linearRampToValueAtTime(v,t){this.calls.push([v,t])},exponentialRampToValueAtTime(v,t){this.calls.push([v,t])}});
  class MockAudio{
   constructor(){created++;this.state='running';this.currentTime=10;this.destination={}}
   addEventListener(){}resume(){this.state='running';return Promise.resolve()}
   createOscillator(){const o={frequency:param(),type:'',starts:[],stops:[],connect(){},disconnect(){},addEventListener(){},start(t){this.starts.push(t)},stop(t){this.stops.push(t)}};oscillators.push(o);return o}
-  createGain(){return {gain:param(),connect(){},disconnect(){}}}
+  createGain(){const node={gain:param(),connect(){},disconnect(){}};gains.push(node);return node}
  }
- const ctx=vm.createContext({window:{AudioContext:MockAudio},localStorage:{getItem:k=>audioDb[k]??null,setItem:(k,v)=>{audioDb[k]=v}},document:{getElementById:audioNode},setTimeout,clearTimeout});
+ const ctx=vm.createContext({window:{AudioContext:MockAudio},localStorage:{getItem:k=>audioDb[k]??null,setItem:(k,v)=>{if(storageFull)throw Error('full');audioDb[k]=v}},document:{getElementById:audioNode},setTimeout,clearTimeout});
  const audioSource=script.slice(script.indexOf('const reminderClock=createEndReminder();'),script.indexOf('function refreshAll('));
  vm.runInContext(prefix+audioSource+';globalThis.audioTest={state,playReminderChime,activateReminderAudio,renderSoundControls,get voices(){return reminderVoices.size},get ctx(){return reminderAudio}};',ctx);
  const a=ctx.audioTest,originalAudioState=plain(a.state);
- a.renderSoundControls();assert.equal(created,0);assert.equal(audioNode('sound-activate').textContent,'启用');
+ a.renderSoundControls();assert.equal(created,0);assert.equal(audioNode('sound-activate').dataset.audioState,'pending');
+ assert.equal(audioNode('sound-volume').value,'60');
  assert.equal(a.playReminderChime(),false);await a.activateReminderAudio();
- assert.equal(created,1);assert.equal(a.voices,2);assert.equal(audioNode('sound-activate').textContent,'试听');
+ assert.equal(created,1);assert.equal(a.voices,2);assert.equal(audioNode('sound-activate').dataset.audioState,'ready');
+ assert.equal(audioNode('sound-activate').textContent,undefined); // SVG is not replaced by status text.
+ assert.equal(gains[0].gain.calls[1][0],.5*Math.pow(.6,1.5));
  assert.deepEqual(oscillators.map(o=>o.frequency.calls[0][0]),[660,880]);
  assert.equal(a.playReminderChime(),true);assert.equal(a.voices,2); // stops preceding short chime
+ const input=volume=>audioNode('sound-volume').listeners.input({target:{value:String(volume)}});
+ input(100);assert.equal(a.state.soundVolume,100);assert.equal(JSON.parse(audioDb[KEY]).soundVolume,100);
+ assert.equal(a.playReminderChime(),true);assert.equal(gains[gains.length-1].gain.calls[1][0],.5);
+ input(0);assert.equal(a.voices,0);const countBefore=oscillators.length;
+ assert.equal(a.playReminderChime(),true);assert.equal(oscillators.length,countBefore);assert.equal(audioNode('sound-volume-value').textContent,'0%');
+ input(27);assert.equal(a.playReminderChime(),true);assert.equal(gains[gains.length-1].gain.calls[1][0],.5*Math.pow(.27,1.5));
+ assert.equal(boot(audioDb).state.soundVolume,27);input(60);
+ storageFull=true;input(95);assert.equal(a.state.soundVolume,60);assert.equal(audioNode('sound-volume').value,'60');storageFull=false;
  audioNode('sound-toggle').listeners.click();assert.equal(a.state.soundReminder,false);assert.equal(a.voices,0);
- assert.equal(audioNode('sound-toggle').attrs['aria-checked'],'false');assert.equal(audioNode('sound-activate').hidden,true);
+ assert.equal(audioNode('sound-toggle').attrs['aria-checked'],'false');assert.notEqual(audioNode('sound-activate').hidden,true);
  assert.equal(a.playReminderChime(),false);assert.equal(JSON.parse(audioDb[KEY]).soundReminder,false);
  const unchanged={...plain(a.state),soundReminder:true};assert.deepEqual(unchanged,originalAudioState);
+ await a.activateReminderAudio(true);assert.equal(a.voices,2);assert.equal(a.state.soundReminder,false);assert.equal(JSON.parse(audioDb[KEY]).soundReminder,false);
  audioNode('sound-toggle').listeners.click();assert.equal(a.state.soundReminder,true);assert.equal(created,1);
- a.ctx.state='interrupted';a.renderSoundControls();assert.equal(audioNode('sound-activate').textContent,'启用');assert.equal(a.playReminderChime(),false);
+ a.ctx.state='interrupted';a.renderSoundControls();assert.equal(audioNode('sound-activate').dataset.audioState,'pending');assert.equal(a.playReminderChime(),false);
  await a.activateReminderAudio();assert.equal(a.ctx.state,'running');assert.equal(a.voices,2);
  audioNode('sound-toggle').listeners.click();
  ctx.window.AudioContext=undefined;vm.runInContext('reminderAudio=null;state.soundReminder=true;',ctx);
- await a.activateReminderAudio();assert.equal(audioNode('sound-activate').disabled,false);assert.equal(audioNode('sound-activate').textContent,'启用');
+ await a.activateReminderAudio();assert.equal(audioNode('sound-activate').disabled,false);assert.equal(audioNode('sound-activate').dataset.audioState,'pending');
  assert.ok(audioNode('toast').textContent.includes('暂未启用声音'));
  console.log('PASS: no autoplay on load, gesture-activated two-note chime, sound switch and persistent setting, immediate mute, stopped overlapping voices, interrupted-context recovery, unsupported-browser feedback and untouched learning records');
+ console.log('PASS: icon-only preview without enabling reminders, 0–100 volume, silent zero, safe peak gain, louder default, volume reload persistence and storage failure protection');
 }
 testReminderAudio().catch(error=>{console.error(error);process.exitCode=1});
