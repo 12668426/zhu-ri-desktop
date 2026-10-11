@@ -5,9 +5,15 @@ new Function(script);
 const prefix=script.split('// 真实的逐秒倒计时。')[0];
 const clockHelpers=script.slice(script.indexOf('function segmentClock('),script.indexOf('function refreshCountdown('));
 const KEY='zhuri-anhui-study-v1';
+// Keep dated fixtures independent of the actual day this suite runs.
+const fixtureTime=new Date(2026,9,10,15).getTime();
+class FixtureDate extends Date{
+ constructor(...args){super(...(args.length?args:[fixtureTime]))}
+ static now(){return fixtureTime}
+}
 function boot(db={},fail=false){
- const ctx=vm.createContext({localStorage:{getItem:k=>db[k]??null,setItem:(k,v)=>{if(fail===true||(typeof fail==='function'&&fail(k)))throw Error('full');db[k]=v}},document:{getElementById:()=>({classList:{add(){},remove(){}}})},setTimeout:()=>0,clearTimeout(){}});
- vm.runInContext(prefix+clockHelpers+';globalThis.inspect={state,defaultSchedule,mathLessons,mathStages,diff,tod,currentTimeline,todayTasks,dailyPlan,dailyCard,orderedScheduleRows,movedScheduleRows,scheduleMoveProposal,saveScheduleProposal,saveSchedulePreference,scheduleCard,createEndReminder,segmentClock};',ctx);
+ const ctx=vm.createContext({Date:FixtureDate,localStorage:{getItem:k=>db[k]??null,setItem:(k,v)=>{if(fail===true||(typeof fail==='function'&&fail(k)))throw Error('full');db[k]=v}},document:{getElementById:()=>({classList:{add(){},remove(){}}})},setTimeout:()=>0,clearTimeout(){}});
+ vm.runInContext(prefix+clockHelpers+';globalThis.inspect={state,defaultSchedule,mathLessons,mathStages,diff,tod,currentTimeline,todayTasks,dailyPlan,dailyCard,orderedScheduleRows,movedScheduleRows,scheduleMoveProposal,saveScheduleProposal,saveSchedulePreference,scheduleCard,createBoundaryReminder,scheduleBoundaries,segmentClock};',ctx);
  return ctx.inspect;
 }
 const original={schedule:[{id:'x1',start:'07:00',end:'08:00',days:[0,1,2,3,4,5,6]}],checkedVideos:[1,2],checkedCircuit:[0],dailyChecks:{'2026-10-09':['x1']},taskNotes:{x1:'kept'},videoTitles:{1:'custom title'},blankPercent:24};
@@ -171,7 +177,7 @@ const overnight=custom([{id:'a',start:'21:00',end:'23:00',days},{id:'b',start:'2
 assert.ok(!overnight.scheduleMoveProposal(overnight.movedScheduleRows(overnight.todayTasks(),'b',0)).error);
 const overlap=custom([{id:'a',start:'10:00',end:'12:00',days},{id:'b',start:'11:00',end:'13:00',days}]);
 assert.ok(overlap.scheduleMoveProposal(overlap.todayTasks()).error);
-const weekday=new Date().getDay(),mixed=custom([{id:'a',start:'10:00',end:'11:00',days},{id:'b',start:'11:00',end:'12:00',days:[weekday]}]);
+const weekday=new FixtureDate().getDay(),mixed=custom([{id:'a',start:'10:00',end:'11:00',days},{id:'b',start:'11:00',end:'12:00',days:[weekday]}]);
 assert.ok(mixed.scheduleMoveProposal(mixed.todayTasks()).error);
 console.log('PASS: both reorder modes, unchanged countdown in display-only mode, preview isolation, fixed durations, complete-day coverage, gym warning, automatic backup, record preservation, reload persistence, stale preview and failed storage protection, gaps, midnight and invalid schedules');
 function testRowDragReleaseClick(){
@@ -219,25 +225,46 @@ assert.ok(!soundMarkup.includes('>试听<'));assert.ok(soundMarkup.includes('ari
 assert.ok(html.includes('.sound-activate:after'));
 const midnight=new Date(2026,9,11,0,0).getTime();
 const end=soundBoot.segmentClock(new Date(midnight-1000));assert.equal(end.endsAt,midnight);
-const segment={id:end.cur.id,title:end.cur.title,endsAt:end.endsAt},nextSegment={id:'next',endsAt:midnight+3600000};
-const reminder=soundBoot.createEndReminder();
-assert.equal(reminder.tick(new Date(midnight-1000),segment,'original',true),null);
-assert.equal(reminder.tick(new Date(midnight),nextSegment,'original',true).id,segment.id);
-assert.equal(reminder.tick(new Date(midnight+1000),nextSegment,'original',true),null);
-reminder.reset(); // resetting/reloading never rings immediately
-assert.equal(reminder.tick(new Date(midnight+1000),nextSegment,'original',true),null);
-for(const [enabled,schedule,elapsed] of [[false,'original',1000],[true,'edited',1000],[true,'original',60000],[true,'original',-1000]]){
- const check=soundBoot.createEndReminder();check.tick(new Date(midnight-500),segment,'original',true);
- assert.equal(check.tick(new Date(midnight-500+elapsed),nextSegment,schedule,enabled),null);
+const allDays=[0,1,2,3,4,5,6],boundarySchedule=[
+ {id:'a',title:'A',start:'10:00',end:'13:00',days:allDays},
+ {id:'b',title:'B',start:'13:00',end:'15:00',days:allDays}];
+const at=(h,m=0,s=0)=>new Date(2026,9,10,h,m,s);
+const edge=(time,schedule=boundarySchedule,delay=1000)=>{
+ const r=soundBoot.createBoundaryReminder();assert.equal(r.tick(new Date(time.getTime()-1000),schedule,true),null);
+ return {reminder:r,event:r.tick(new Date(time.getTime()+delay-1000),schedule,true)};
+};
+assert.ok(soundMarkup.includes('时段开始和结束时响一声，同一时刻合并'));
+const startEdge=edge(at(10));assert.equal(startEdge.event.starting[0].id,'a');assert.equal(startEdge.event.ending.length,0);
+const handoff=edge(at(13));assert.equal(handoff.event.starting[0].id,'b');assert.equal(handoff.event.ending[0].id,'a');
+assert.equal(handoff.reminder.tick(at(13,0,1),boundarySchedule,true),null);
+assert.equal(edge(at(15)).event.ending[0].id,'b');
+const gaps=[boundarySchedule[0],{...boundarySchedule[1],start:'14:00'}];
+assert.equal(edge(at(13),gaps).event.starting.length,0);
+assert.equal(edge(at(14),gaps).event.starting[0].id,'b');
+assert.equal(edge(at(10),boundarySchedule,3000).event.starting[0].id,'a'); // Small timer delay is allowed.
+const overlapEdges=[...boundarySchedule,{...boundarySchedule[0],id:'c',start:'11:00'}, {...boundarySchedule[1],id:'d',end:'14:00'}];
+const grouped=edge(at(13),overlapEdges).event;
+assert.equal(grouped.starting.length,2);assert.equal(grouped.ending.length,2);
+assert.equal(soundBoot.scheduleBoundaries(at(12,59,59).getTime(),at(13).getTime(),overlapEdges).length,1);
+const night=[{id:'night',title:'night',start:'23:00',end:'01:00',days:[6]}, {id:'sun',title:'sun',start:'01:00',end:'02:00',days:[0]}];
+const overnightEdge=edge(new Date(2026,9,11,1),night).event;
+assert.equal(overnightEdge.ending[0].id,'night');assert.equal(overnightEdge.starting[0].id,'sun');
+const midnightEdge=edge(new Date(midnight),soundBoot.state.schedule).event;
+assert.equal(midnightEdge.ending[0].id,end.cur.id);assert.equal(midnightEdge.starting.length,1);
+assert.equal(edge(new Date(2026,9,12,1),night).event,null); // Saturday-only start must not end on Monday.
+for(const [enabled,schedule,elapsed] of [[false,boundarySchedule,1000],[true,gaps,1000],[true,boundarySchedule,60000],[true,boundarySchedule,-1000]]){
+ const check=soundBoot.createBoundaryReminder();check.tick(at(12,59,59),boundarySchedule,true);
+ assert.equal(check.tick(new Date(at(12,59,59).getTime()+elapsed),schedule,enabled),null);
 }
-const gapReminder=soundBoot.createEndReminder();gapReminder.tick(new Date(midnight-1000),segment,'original',true);
-assert.equal(gapReminder.tick(new Date(midnight+2000),null,'original',true).id,segment.id);
-const repeated=soundBoot.createEndReminder();repeated.tick(new Date(midnight-1000),segment,'original',true);repeated.tick(new Date(midnight),segment,'original',true);
-assert.equal(repeated.tick(new Date(midnight+1000),segment,'original',true),null);
-console.log('PASS: sound defaults off, exact midnight boundary, one alert at segment transition or gap, no repeat, no reload/sleep/clock-edit/schedule-edit catch-up');
+handoff.reminder.reset();assert.equal(handoff.reminder.tick(at(13),boundarySchedule,true),null);
+const once=edge(at(13)).reminder;
+once.tick(at(12,59,59),boundarySchedule,true);assert.equal(once.tick(at(13),boundarySchedule,true),null);
+const invalid=[{...boundarySchedule[0],start:'10:99'},{...boundarySchedule[0],end:'25:00'},{...boundarySchedule[0],end:'10:00'}];
+assert.equal(soundBoot.scheduleBoundaries(at(0).getTime(),at(23,59,59).getTime(),invalid).length,0);
+console.log('PASS: start and end alerts, starts after gaps, single grouped handoff, simultaneous overlapping edges, midnight/weekday overnight boundaries, delayed tick, no repeat or reload/sleep/clock-edit/schedule-edit catch-up, invalid times ignored');
 async function testReminderAudio(){
  const audioDb={[KEY]:JSON.stringify({...fixture,soundReminder:true})},audioNodes={},oscillators=[],gains=[];let created=0,storageFull=false;
- const audioNode=id=>audioNodes[id]??={attrs:{},style:{},dataset:{},listeners:{},classList:{add(){},remove(){}},setAttribute(k,v){this.attrs[k]=v},addEventListener(k,f){this.listeners[k]=f}};
+ const audioNode=id=>audioNodes[id]??={attrs:{},style:{},dataset:{},listeners:{},classList:{add(){},remove(){},toggle(){}},setAttribute(k,v){this.attrs[k]=v},addEventListener(k,f){this.listeners[k]=f}};
  const param=()=>({calls:[],setValueAtTime(v,t){this.calls.push([v,t])},linearRampToValueAtTime(v,t){this.calls.push([v,t])},exponentialRampToValueAtTime(v,t){this.calls.push([v,t])}});
  class MockAudio{
   constructor(){created++;this.state='running';this.currentTime=10;this.destination={}}
@@ -246,8 +273,8 @@ async function testReminderAudio(){
   createGain(){const node={gain:param(),connect(){},disconnect(){}};gains.push(node);return node}
  }
  const ctx=vm.createContext({window:{AudioContext:MockAudio},localStorage:{getItem:k=>audioDb[k]??null,setItem:(k,v)=>{if(storageFull)throw Error('full');audioDb[k]=v}},document:{getElementById:audioNode},setTimeout,clearTimeout});
- const audioSource=script.slice(script.indexOf('const reminderClock=createEndReminder();'),script.indexOf('function refreshAll('));
- vm.runInContext(prefix+audioSource+';globalThis.audioTest={state,playReminderChime,activateReminderAudio,renderSoundControls,get voices(){return reminderVoices.size},get ctx(){return reminderAudio}};',ctx);
+ const audioSource=script.slice(script.indexOf('function refreshCountdown('),script.indexOf('function refreshAll('));
+ vm.runInContext(prefix+clockHelpers+audioSource+';globalThis.audioTest={state,refreshCountdown,playReminderChime,activateReminderAudio,renderSoundControls,get voices(){return reminderVoices.size},get ctx(){return reminderAudio}};',ctx);
  const a=ctx.audioTest,originalAudioState=plain(a.state);
  a.renderSoundControls();assert.equal(created,0);assert.equal(audioNode('sound-activate').dataset.audioState,'pending');
  assert.equal(audioNode('sound-volume').value,'60');
@@ -256,6 +283,10 @@ async function testReminderAudio(){
  assert.equal(audioNode('sound-activate').textContent,undefined); // SVG is not replaced by status text.
  assert.equal(gains[0].gain.calls[1][0],.5*Math.pow(.6,1.5));
  assert.deepEqual(oscillators.map(o=>o.frequency.calls[0][0]),[660,880]);
+ const beforeHandoff=oscillators.length;
+ a.refreshCountdown(at(12,59,59));a.refreshCountdown(at(13));
+ assert.equal(oscillators.length,beforeHandoff+2);assert.ok(audioNode('toast').textContent.includes('时段交接：'));
+ a.refreshCountdown(at(13,0,1));assert.equal(oscillators.length,beforeHandoff+2);
  assert.equal(a.playReminderChime(),true);assert.equal(a.voices,2); // stops preceding short chime
  const input=volume=>audioNode('sound-volume').listeners.input({target:{value:String(volume)}});
  input(100);assert.equal(a.state.soundVolume,100);assert.equal(JSON.parse(audioDb[KEY]).soundVolume,100);
@@ -279,6 +310,7 @@ async function testReminderAudio(){
  assert.ok(audioNode('toast').textContent.includes('暂未启用声音'));
  console.log('PASS: no autoplay on load, gesture-activated two-note chime, sound switch and persistent setting, immediate mute, stopped overlapping voices, interrupted-context recovery, unsupported-browser feedback and untouched learning records');
  console.log('PASS: icon-only preview without enabling reminders, 0–100 volume, silent zero, safe peak gain, louder default, volume reload persistence and storage failure protection');
+ console.log('PASS: real countdown integration plays exactly one two-note chime for an end/start handoff, announces both tasks once, no duplicate on next tick');
 }
 function testVolumePopover(){
  const timers=new Map(),docListeners={},windowListeners={};let nextTimer=0;
