@@ -5,6 +5,7 @@ new Function(script);
 const prefix=script.split('// 真实的逐秒倒计时。')[0];
 const clockHelpers=script.slice(script.indexOf('function segmentClock('),script.indexOf('function refreshCountdown('));
 const KEY='zhuri-anhui-study-v1';
+const revision='2026-10-12-course-practice';
 // Keep dated fixtures independent of the actual day this suite runs.
 const fixtureTime=new Date(2026,9,10,15).getTime();
 class FixtureDate extends Date{
@@ -24,15 +25,29 @@ assert.equal(new Set(r.mathLessons.map(x=>x.id)).size,56);
 assert.deepEqual(JSON.parse(JSON.stringify(r.state.checkedVideos)),[1,2]);
 assert.equal(r.state.taskNotes.x1,'kept');assert.equal(r.state.videoTitles[1],'custom title');assert.equal(r.state.blankPercent,24);
 assert.equal(r.state.scheduleArchive[0].schedule[0].id,'x1');
-assert.deepEqual(JSON.parse(db[KEY+'-before-2026-10-10-rounded-hours']),original);
+assert.deepEqual(JSON.parse(db[KEY+'-before-'+revision]),original);
 assert.equal(r.defaultSchedule.reduce((n,t)=>n+r.diff(t),0),1440);
 const coreSlots=r.defaultSchedule.filter(t=>['高数','英语','模拟电子技术','电路'].includes(t.subject)&&r.diff(t)===120);
-assert.equal(coreSlots.length,4);
-assert.deepEqual(Array.from(coreSlots,x=>[x.subject,x.start,x.end]),[['高数','10:00','12:00'],['英语','13:00','15:00'],['模拟电子技术','15:00','17:00'],['电路','21:00','23:00']]);
-const card=r.dailyCard();assert.ok(card.includes('四科均分'));
-assert.equal((card.match(/净学习90分钟＋休息30分钟/g)||[]).length,4);
+assert.equal(coreSlots.length,3);
+assert.deepEqual(Array.from(coreSlots,x=>[x.subject,x.start,x.end]),[['英语','14:00','16:00'],['模拟电子技术','19:30','21:30'],['电路','22:30','00:30']]);
+const mathSlots=r.defaultSchedule.filter(t=>t.subject==='高数'&&!t.title.includes('做题'));
+assert.deepEqual(Array.from(mathSlots,x=>[x.start,x.end,r.diff(x)]),[['09:15','10:55',100],['11:05','12:15',70]]);
+const mathBreak=r.defaultSchedule.find(t=>t.title==='高数课间休息');
+assert.deepEqual([mathBreak.start,mathBreak.end,r.diff(mathBreak)],['10:55','11:05',10]);
+const practices=r.defaultSchedule.filter(t=>t.title.includes('课后做题'));
+assert.deepEqual(Array.from(practices,t=>[t.subject,t.start,t.end,r.diff(t)]),[
+ ['高数','12:15','13:15',60],['英语','16:00','17:00',60],['模拟电子技术','21:30','22:30',60],['电路','00:30','01:30',60]]);
+for(const t of practices){const lessons=r.defaultSchedule.filter(s=>s.subject===t.subject&&!s.title.includes('做题'));assert.equal(lessons[lessons.length-1].end,t.start)}
+const exerciseGym=r.defaultSchedule.find(t=>t.subject==='运动'),lunch=r.defaultSchedule.find(t=>t.title==='午饭、休息'),sleepBlock=r.defaultSchedule.find(t=>t.subject==='睡眠');
+assert.deepEqual([exerciseGym.start,exerciseGym.end,exerciseGym.title],['17:00','19:30','健身、往返、洗澡、晚饭']);
+assert.deepEqual([lunch.start,lunch.end],['13:15','14:00']);
+assert.deepEqual([sleepBlock.start,sleepBlock.end,r.diff(sleepBlock)],['01:30','09:00',450]);
+assert.equal(r.defaultSchedule.length,14);assert.equal(new Set(r.defaultSchedule.map(t=>t.id)).size,14);
+assert.ok(!r.defaultSchedule.some(t=>/准备健身|健身前准备|晚餐|机动时间/.test(t.title)));
+const card=r.dailyCard();assert.ok(card.includes('四科课程＋课后练习'));
+assert.ok(!card.includes('净学习90分钟＋休息30分钟'));assert.ok(!card.includes('四科均分'));
 assert.ok(!card.includes('今日目标1项'));assert.ok(!card.includes('目标最多2节'));
-assert.ok(card.includes('不加新课，也不只复习高数'));
+assert.ok(card.includes('每个学科上完当天的课后留1小时做题'));
 for(let minute=0;minute<1440;minute++){
  const now=new Date(2026,9,10,Math.floor(minute/60),minute%60);
  assert.ok(r.currentTimeline(now).cur,`missing minute ${minute}`);
@@ -43,6 +58,19 @@ let edited=JSON.parse(db[KEY]);edited.schedule[0].title='user changed';db[KEY]=J
 r=boot(db);assert.equal(r.state.schedule[0].title,'user changed');assert.equal(r.state.scheduleArchive.length,1);
 const failedDb={[KEY]:JSON.stringify(original)},failed=boot(failedDb,true);
 assert.equal(failed.state.schedule[0].id,'x1');assert.equal(failedDb[KEY],JSON.stringify(original));
+const oldDesktop={...original,scheduleRevision:'2026-10-10-rounded-hours',checkedMath:['summer-04'],checkedCircuit:[0,2],dailyPlans:{'2026-10-12':{math:['summer-05'],mock:[3],circuit:1}},bottomInset:140,soundReminder:true,soundVolume:73,syncScheduleDrag:false,tableOrder:['x1'],customPreference:'preserve'};
+const upgradeDb={[KEY]:JSON.stringify(oldDesktop)},upgraded=boot(upgradeDb);
+assert.deepEqual(JSON.parse(upgradeDb[KEY+'-before-'+revision]),oldDesktop);
+assert.equal(upgraded.state.scheduleRevision,revision);assert.equal(upgraded.state.schedule.length,14);
+assert.deepEqual(Array.from(upgraded.state.tableOrder),[]);
+for(const field of ['checkedMath','checkedVideos','checkedCircuit','dailyChecks','taskNotes','videoTitles','dailyPlans','blankPercent','bottomInset','soundReminder','soundVolume','syncScheduleDrag','customPreference'])assert.deepEqual(JSON.parse(JSON.stringify(upgraded.state[field])),oldDesktop[field]);
+assert.deepEqual(JSON.parse(JSON.stringify(upgraded.state.scheduleArchive[0].schedule)),oldDesktop.schedule);
+boot(upgradeDb);assert.equal(JSON.parse(upgradeDb[KEY]).scheduleArchive.length,1);
+for(const failKey of [KEY,KEY+'-before-'+revision]){
+ const failedUpgrade={[KEY]:JSON.stringify(oldDesktop)},retained=boot(failedUpgrade,k=>k===failKey);
+ assert.equal(failedUpgrade[KEY],JSON.stringify(oldDesktop));assert.equal(retained.state.scheduleRevision,oldDesktop.scheduleRevision);
+ assert.deepEqual(JSON.parse(JSON.stringify(retained.state.schedule)),oldDesktop.schedule);
+}
 const first=r.dailyPlan(new Date(2026,9,10));assert.equal(first.math[0],'summer-01');assert.equal(first.mock[0],3);
 r.state.checkedMath.push('summer-01');r.state.checkedVideos.push(3);
 assert.equal(r.dailyPlan(new Date(2026,9,10)).math[0],'summer-01');
@@ -123,13 +151,14 @@ gridBottom=595;vm.runInContext('alignSchedulePanel()',alignmentCtx);
 assert.equal(panelVars['--schedule-panel-height'],'530px');
 alignmentCtx.window.innerWidth=375;vm.runInContext('alignSchedulePanel()',alignmentCtx);
 assert.equal(panelVars['--schedule-panel-height'],undefined);
-console.log('PASS: syntax, catalogs, four equal study blocks, time-based daily plan, migration backup, prior records, one-time migration, storage failure, 1440-minute coverage, daily stability, carryover, Sunday review, summer-to-autumn order');
+console.log('PASS: confirmed 14-row timetable, math 100/10/70 minutes, four separate 60-minute practice blocks, other lectures 120 minutes, combined gym/dinner, no prep slot, 7.5-hour sleep, 1440-minute coverage and catalog/daily-plan integrity');
+console.log('PASS: one-time old-revision upgrade with full backup, unchanged checks/notes/daily plans/audio/layout settings, chronological display reset, archive preserved, failed backup or primary save leaves old schedule intact');
 console.log('PASS: removed daily entry, fixed overview, three course entries, valid unique progress counts and percentages');
 console.log('PASS: bottom capsule drag, keyboard, reset, single-pointer alternative, save-once, viewport clamp, preferred size recovery, additive persistence and unchanged learning records');
 console.log('PASS: downward drag through default to zero, panels fill chosen height, 96px downward expansion, upward shrink and mobile alignment reset');
 // Reordering is independent of completion data and cannot silently mutate time.
 const plain=x=>JSON.parse(JSON.stringify(x));
-const fixture={...plain(r.state),schedule:plain(r.defaultSchedule),scheduleRevision:'2026-10-10-rounded-hours',checkedMath:['summer-01'],checkedVideos:[1,2],checkedCircuit:[0],dailyChecks:{'2026-10-10':['r20261010-1']},taskNotes:{'r20261010-1':'保留备注'},tableOrder:[],syncScheduleDrag:false,customPreference:'keep'};
+const fixture={...plain(r.state),schedule:plain(r.defaultSchedule),scheduleRevision:revision,checkedMath:['summer-01'],checkedVideos:[1,2],checkedCircuit:[0],dailyChecks:{'2026-10-10':['r20261010-1']},taskNotes:{'r20261010-1':'保留备注'},tableOrder:[],syncScheduleDrag:false,customPreference:'keep'};
 const orderDb={[KEY]:JSON.stringify(fixture)},order=boot(orderDb);
 const beforeSchedule=JSON.stringify(order.state.schedule),chronological=order.todayTasks();
 const gym=chronological.find(t=>t.subject==='运动');
@@ -140,11 +169,11 @@ assert.equal(JSON.stringify(order.state.schedule),beforeSchedule);
 assert.equal(order.currentTimeline(new Date(2026,9,10,17,30)).cur.id,gym.id);
 assert.equal(boot(orderDb).state.syncScheduleDrag,false);
 assert.deepEqual(plain(boot(orderDb).state.tableOrder),plain(order.state.tableOrder));
-assert.equal((order.scheduleCard().body.match(/class="row-grip"/g)||[]).length,12);
+assert.equal((order.scheduleCard().body.match(/class="row-grip"/g)||[]).length,14);
 assert.ok(order.scheduleCard().head.includes('aria-checked="false"'));
 assert.equal(order.movedScheduleRows(chronological,'missing',0),null);
 assert.equal(order.movedScheduleRows(chronological,gym.id,-1),null);
-assert.equal(order.movedScheduleRows(chronological,gym.id,12),null);
+assert.equal(order.movedScheduleRows(chronological,gym.id,chronological.length),null);
 const beforePreview=JSON.stringify(order.state),proposal=order.scheduleMoveProposal(display);
 assert.ok(!proposal.error);assert.equal(JSON.stringify(order.state),beforePreview);
 assert.ok(proposal.warnings.some(t=>t.includes('健身')));
@@ -224,7 +253,7 @@ assert.ok(!soundMarkup.includes('<span>音效提醒</span>'));
 assert.ok(!soundMarkup.includes('>试听<'));assert.ok(soundMarkup.includes('aria-label="试听提示音"'));
 assert.ok(html.includes('.sound-activate:after'));
 const midnight=new Date(2026,9,11,0,0).getTime();
-const end=soundBoot.segmentClock(new Date(midnight-1000));assert.equal(end.endsAt,midnight);
+const end=soundBoot.segmentClock(new Date(midnight-1000));assert.equal(end.endsAt,midnight+30*60000);
 const allDays=[0,1,2,3,4,5,6],boundarySchedule=[
  {id:'a',title:'A',start:'10:00',end:'13:00',days:allDays},
  {id:'b',title:'B',start:'13:00',end:'15:00',days:allDays}];
@@ -249,8 +278,12 @@ assert.equal(soundBoot.scheduleBoundaries(at(12,59,59).getTime(),at(13).getTime(
 const night=[{id:'night',title:'night',start:'23:00',end:'01:00',days:[6]}, {id:'sun',title:'sun',start:'01:00',end:'02:00',days:[0]}];
 const overnightEdge=edge(new Date(2026,9,11,1),night).event;
 assert.equal(overnightEdge.ending[0].id,'night');assert.equal(overnightEdge.starting[0].id,'sun');
-const midnightEdge=edge(new Date(midnight),soundBoot.state.schedule).event;
+assert.equal(edge(new Date(midnight),soundBoot.state.schedule).event,null); // Crossing midnight alone is not a schedule edge.
+const midnightEdge=edge(new Date(midnight+30*60000),soundBoot.state.schedule).event;
 assert.equal(midnightEdge.ending[0].id,end.cur.id);assert.equal(midnightEdge.starting.length,1);
+assert.equal(midnightEdge.starting[0].id,'r20261012-practice-circuit');
+const sleepEdge=edge(new Date(midnight+90*60000),soundBoot.state.schedule).event;
+assert.equal(sleepEdge.ending[0].id,'r20261012-practice-circuit');assert.equal(sleepEdge.starting[0].subject,'睡眠');
 assert.equal(edge(new Date(2026,9,12,1),night).event,null); // Saturday-only start must not end on Monday.
 for(const [enabled,schedule,elapsed] of [[false,boundarySchedule,1000],[true,gaps,1000],[true,boundarySchedule,60000],[true,boundarySchedule,-1000]]){
  const check=soundBoot.createBoundaryReminder();check.tick(at(12,59,59),boundarySchedule,true);
@@ -284,9 +317,9 @@ async function testReminderAudio(){
  assert.equal(gains[0].gain.calls[1][0],.5*Math.pow(.6,1.5));
  assert.deepEqual(oscillators.map(o=>o.frequency.calls[0][0]),[660,880]);
  const beforeHandoff=oscillators.length;
- a.refreshCountdown(at(12,59,59));a.refreshCountdown(at(13));
+ a.refreshCountdown(at(13,14,59));a.refreshCountdown(at(13,15));
  assert.equal(oscillators.length,beforeHandoff+2);assert.ok(audioNode('toast').textContent.includes('时段交接：'));
- a.refreshCountdown(at(13,0,1));assert.equal(oscillators.length,beforeHandoff+2);
+ a.refreshCountdown(at(13,15,1));assert.equal(oscillators.length,beforeHandoff+2);
  assert.equal(a.playReminderChime(),true);assert.equal(a.voices,2); // stops preceding short chime
  const input=volume=>audioNode('sound-volume').listeners.input({target:{value:String(volume)}});
  input(100);assert.equal(a.state.soundVolume,100);assert.equal(JSON.parse(audioDb[KEY]).soundVolume,100);
